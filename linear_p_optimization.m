@@ -3,25 +3,28 @@
 % different values of a and b. 
 clear;
 
-a = 0.8;
+a = 0.3;
 b = 0.1;
 trueSignalProbFn = @(y) 0.8 .* y;
 falseSignalProbFn = @(y) 0.1 .* y;
 V2VMass = 0.9;
-crashCost = 20;
+crashCost = 3;
 
 granularity= 100;
 
+% Calculate optimal beta for each assumed slope 
 slopes = linspace(0, 1-b, granularity);
 [optimalCrashProb, beta] = GetOptimalBeta(slopes, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
-beta(1, 1, 100) = 1;
+
+% Calculate loss of assumed optimal beta on different slopes
 [betaMat, slopeMat] = meshgrid(beta, slopes);
 [inducedxn, inducedxvu, inducedxvs] = GetEqBehavior(slopeMat, b, betaMat, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 inducedCrashProb = GetCrashProb(slopeMat, b, inducedxn, inducedxvu, inducedxvs, trueSignalProbFn, falseSignalProbFn, V2VMass, betaMat);
-loss = inducedCrashProb - repmat(squeeze(optimalCrashProb), 1, 100);
+o = repmat(squeeze(optimalCrashProb), 100, 1).'
+loss = inducedCrashProb - o;
 
 function [crashProb, beta] = GetOptimalBeta(a, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn)
-    crashProbs = zeros(cat(2, [2], size(a)));
+    crashProbs = squeeze(zeros(cat(2, [2], size(a))));
     for beta = [0, 1]
         [xn, xvu, xvs] = GetEqBehavior(a, b, beta, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
         crashProbs(beta+1, :) = GetCrashProb(a, b, xn, xvu, xvs, trueSignalProbFn, falseSignalProbFn, V2VMass, beta);
@@ -38,9 +41,9 @@ function [xn, xvu, xvs] = GetEqBehavior(a, b, beta, V2VMass, crashCost, trueSign
     Pvs = fy ./ (crashCost.*ty + fy);
     Pn = 1 ./ (1 + crashCost);
     Pvu = (1-beta.*fy) ./ (1 + crashCost.*(1-beta.*ty) - beta.*fy);
-    Qvs = beta*((ty-fy)*Pvs + fy);
-    Qn = beta*((ty-fy)*Pn + fy);
-    Qvu = beta*((ty-fy)*Pvu + fy);
+    Qvs = beta.*((ty-fy).*Pvs + fy);
+    Qn = beta.*((ty-fy).*Pn + fy);
+    Qvu = beta.*((ty-fy).*Pvu + fy);
 
     % Calculate regions where each eq is active
     E1U = zeros(size(a)) + b; % p(0)
