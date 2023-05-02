@@ -20,8 +20,13 @@ slopes = linspace(0, 1-b, granularity);
 [betaMat, slopeMat] = meshgrid(beta, slopes);
 [inducedxn, inducedxvu, inducedxvs] = GetEqBehavior(slopeMat, b, betaMat, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 inducedCrashProb = GetCrashProb(slopeMat, b, inducedxn, inducedxvu, inducedxvs, trueSignalProbFn, falseSignalProbFn, V2VMass, betaMat);
-o = repmat(squeeze(optimalCrashProb), 100, 1).'
-loss = inducedCrashProb - o;
+loss = inducedCrashProb - repmat(squeeze(optimalCrashProb), 100, 1).';
+
+% Plot
+fig = heatmap(loss);
+xlabel("Assumed slope");
+ylabel("Actual slope");
+
 
 function [crashProb, beta] = GetOptimalBeta(a, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn)
     crashProbs = squeeze(zeros(cat(2, [2], size(a))));
