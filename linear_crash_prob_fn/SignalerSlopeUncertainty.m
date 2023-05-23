@@ -7,7 +7,6 @@
 % by the "bad guess" by the signaling designer. 
 clear;
 
-a = 0.3;
 b = 0.1;
 trueSignalProbFn = @(y) 0.8 .* y;
 falseSignalProbFn = @(y) 0.1 .* y;
