@@ -1,4 +1,4 @@
-function SignalerSlopeUncertainty(yInt, trueSignalProbFn, falseSignalProbFn, V2VMass, crashCost, granularity)
+function [crashProbWCertainty, crashProbWUncertainty] = SignalerSlopeUncertainty(yInt, trueSignalProbFn, falseSignalProbFn, V2VMass, crashCost, granularity)
 	% Goal of this script: Assume crash prob is linear: p(x) = ax + b.
 	% Signaling designer thinks they know the value of a, call it a_*. We then
 	% calculate the optimal (accident minimizing) value of beta assuming p(x) =
@@ -12,31 +12,22 @@ function SignalerSlopeUncertainty(yInt, trueSignalProbFn, falseSignalProbFn, V2V
 		falseSignalProbFn(1, 1) function_handle
 		V2VMass double{mustBeInRange(V2VMass, 0, 1)}
 		crashCost double{mustBeGreaterThan(crashCost, 1)}
-		granularity(1, 1) uint32 {mustBePositive} = 100
+		granularity(1, 1) uint32{mustBePositive} = 100
+	end
+	arguments (Output)
+		crashProbWCertainty double
+		crashProbWUncertainty double
 	end
 
 	% Calculate optimal beta for each assumed slope
 	slopes = linspace(0, 1-yInt, granularity);
 	assumedParams = WorldParams(slopes, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 	[optimalBeta, optimalCrashProb] = GetOptimalBeta(assumedParams);
+	crashProbWCertainty = repmat(squeeze(optimalCrashProb), granularity, 1).';
 
 	% Calculate loss of assumed optimal beta on different slopes
 	[betaMat, slopeMat] = meshgrid(optimalBeta, slopes);
 	trueParams = WorldParams(slopeMat, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 	inducedBehavior = GetEqBehavior(trueParams, betaMat);
-	inducedCrashProb = GetCrashProb(trueParams, inducedBehavior, betaMat);
-	loss = inducedCrashProb - repmat(squeeze(optimalCrashProb), granularity, 1).';
-
-	% Plot
-    figure;
-	heatmap(loss);
-	xlabel("Assumed slope");
-	ylabel("Actual slope");
+	crashProbWUncertainty = GetCrashProb(trueParams, inducedBehavior, betaMat);
 end
-
-
-% yInt = 0.1;
-% trueSignalProbFn = @(y) 0.8 .* y;
-% falseSignalProbFn = @(y) 0.1 .* y;
-% V2VMass = 0.9;
-% crashCost = 3;
