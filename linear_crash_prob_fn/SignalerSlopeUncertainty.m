@@ -1,10 +1,10 @@
 % Goal of this script: Assume crash prob is linear: p(x) = ax + b.
 % Signaling designer thinks they know the value of a, call it a_*. We then
 % calculate the optimal (accident minimizing) value of beta assuming p(x) =
-% a_*x + b. 
+% a_*x + b.
 % Then, we calculate the accident probabilities induced by this beta for
 % values of a != a_*, and plot the increase in accident probability caused
-% by the "bad guess" by the signaling designer. 
+% by the "bad guess" by the signaling designer.
 clear;
 
 b = 0.1;
@@ -15,7 +15,7 @@ crashCost = 3;
 
 granularity = 100;
 
-% Calculate optimal beta for each assumed slope 
+% Calculate optimal beta for each assumed slope
 slopes = linspace(0, 1-b, granularity);
 assumedParams = WorldParams(slopes, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 [optimalBeta, optimalCrashProb] = GetOptimalBeta(assumedParams);
