@@ -1,21 +1,29 @@
-function [xn, xvu, xvs] = GetEqBehavior(a, b, beta, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn)
-    ty = trueSignalProbFn(V2VMass);
-    fy = falseSignalProbFn(V2VMass);
+function behavior = GetEqBehavior(worldParams, beta)
+    arguments (Input)
+        worldParams WorldParams
+        beta double
+    end
+    arguments (Output)
+        behavior Behavior
+    end
 
-    Pvs = fy ./ (crashCost.*ty + fy);
-    Pn = 1 ./ (1 + crashCost);
-    Pvu = (1-beta.*fy) ./ (1 + crashCost.*(1-beta.*ty) - beta.*fy);
+    ty = worldParams.trueSignalProbFn(worldParams.V2VMass);
+    fy = worldParams.falseSignalProbFn(worldParams.V2VMass);
+
+    Pvs = fy ./ (worldParams.crashCost.*ty + fy);
+    Pn = 1 ./ (1 + worldParams.crashCost);
+    Pvu = (1-beta.*fy) ./ (1 + worldParams.crashCost.*(1-beta.*ty) - beta.*fy);
     Qvs = beta.*((ty-fy).*Pvs + fy);
     Qn = beta.*((ty-fy).*Pn + fy);
     Qvu = beta.*((ty-fy).*Pvu + fy);
 
     % Calculate regions where each eq is active
-    E1U = zeros(size(a)) + b; % p(0)
-    E2U = a .* ((1 - beta.*Pvu.*(ty-fy)-beta.*fy).*V2VMass) + b;
-    E3U = a .* ((1 - beta.*Pn.*(ty-fy)-beta.*fy).*V2VMass) + b;
-    E4U = a .* (1 - (beta.*Pn.*(ty-fy)-beta.*fy).*V2VMass) + b;
-    E5U = a .* (1 - (beta.*Pvs.*(ty-fy)-beta.*fy).*V2VMass) + b;
-    E6U = a + b; % p(1)
+    E1U = zeros(size(worldParams.slope)) + worldParams.yInt; % p(0)
+    E2U = worldParams.slope .* ((1 - beta.*Pvu.*(ty-fy)-beta.*fy).*worldParams.V2VMass) + worldParams.yInt;
+    E3U = worldParams.slope .* ((1 - beta.*Pn.*(ty-fy)-beta.*fy).*worldParams.V2VMass) + worldParams.yInt;
+    E4U = worldParams.slope .* (1 - (beta.*Pn.*(ty-fy)-beta.*fy).*worldParams.V2VMass) + worldParams.yInt;
+    E5U = worldParams.slope .* (1 - (beta.*Pvs.*(ty-fy)-beta.*fy).*worldParams.V2VMass) + worldParams.yInt;
+    E6U = worldParams.slope + worldParams.yInt; % p(1)
 
     E1 = Pvu < E1U;
     E2 = E1U <= Pvu & Pvu <= E2U;
@@ -26,18 +34,20 @@ function [xn, xvu, xvs] = GetEqBehavior(a, b, beta, V2VMass, crashCost, trueSign
     E7 = E6U < Pvs;
 
     % Describe eq behavior in each region 
-    xvu = zeros(size(a));
-    xvui = (Pvu - b) ./ (a.*(1-Qvu));
+    xvu = zeros(size(worldParams.slope));
+    xvui = (Pvu - worldParams.yInt) ./ (worldParams.slope.*(1-Qvu));
     xvu(E2) = xvui(E2);
-    xvu(E3 | E4 | E5 | E6 | E7) = V2VMass;
+    xvu(E3 | E4 | E5 | E6 | E7) = worldParams.V2VMass;
 
-    xn = zeros(size(a));
-    xni = (Pn - b) ./ a - (1 - Qn).*V2VMass;
+    xn = zeros(size(worldParams.slope));
+    xni = (Pn - worldParams.yInt) ./ worldParams.slope - (1 - Qn).*worldParams.V2VMass;
     xn(E4) = xni(E4);
-    xn(E5 | E6 | E7) = 1-V2VMass;
+    xn(E5 | E6 | E7) = 1-worldParams.V2VMass;
 
-    xvs = zeros(size(a));
-    xvsi = ((Pvs - b)./a - 1 + Qvs.*V2VMass) ./ Qvs;
+    xvs = zeros(size(worldParams.slope));
+    xvsi = ((Pvs - worldParams.yInt)./worldParams.slope - 1 + Qvs.*worldParams.V2VMass) ./ Qvs;
     xvs(E6) = xvsi(E6);
-    xvs(E7) = V2VMass;
+    xvs(E7) = worldParams.V2VMass;
+
+    behavior = Behavior(xn, xvu, xvs);
 end

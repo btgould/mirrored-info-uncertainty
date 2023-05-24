@@ -13,16 +13,18 @@ falseSignalProbFn = @(y) 0.1 .* y;
 V2VMass = 0.9;
 crashCost = 3;
 
-granularity= 100;
+granularity = 100;
 
 % Calculate optimal beta for each assumed slope 
 slopes = linspace(0, 1-b, granularity);
-[optimalBeta, optimalCrashProb] = GetOptimalBeta(slopes, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
+assumedParams = WorldParams(slopes, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
+[optimalBeta, optimalCrashProb] = GetOptimalBeta(assumedParams);
 
 % Calculate loss of assumed optimal beta on different slopes
 [betaMat, slopeMat] = meshgrid(optimalBeta, slopes);
-[inducedxn, inducedxvu, inducedxvs] = GetEqBehavior(slopeMat, b, betaMat, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
-inducedCrashProb = GetCrashProb(slopeMat, b, inducedxn, inducedxvu, inducedxvs, trueSignalProbFn, falseSignalProbFn, V2VMass, betaMat);
+trueParams = WorldParams(slopeMat, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
+inducedBehavior = GetEqBehavior(trueParams, betaMat);
+inducedCrashProb = GetCrashProb(trueParams, inducedBehavior, betaMat);
 loss = inducedCrashProb - repmat(squeeze(optimalCrashProb), 100, 1).';
 
 % Plot

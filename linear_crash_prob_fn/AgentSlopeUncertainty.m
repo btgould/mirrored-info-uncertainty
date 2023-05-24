@@ -14,19 +14,22 @@ falseSignalProbFn = @(y) 0.1 .* y;
 V2VMass = 0.9;
 crashCost = 3;
 
-granularity= 100;
+granularity = 100;
 
 % Calculate optimal beta for each true value of a 
 slopes = linspace(0, 1-b, granularity);
-[optimalBeta, optimalCrashProb] = GetOptimalBeta(slopes, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
+trueParams = WorldParams(slopes, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
+[optimalBeta, optimalCrashProb] = GetOptimalBeta(trueParams);
 
 % Get agent behavior decisions for incorrect guesses of a 
-[assumedSlopeMat, betaMat] = meshgrid(slopes, optimalBeta); % Note: we swapped the order of the meshgrid from signaler uncertainty to keep assumption on horix axis 
-actualSlopeMat = assumedSlopeMat.';
-[inducedxn, inducedxvu, inducedxvs] = GetEqBehavior(assumedSlopeMat, b, betaMat, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
+[assumedSlopeMat, betaMat] = meshgrid(slopes, optimalBeta); % Note: we swapped the order of the meshgrid from signaler uncertainty to keep assumption on horiz axis 
+assumedParams = WorldParams(assumedSlopeMat, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
+inducedBehavior = GetEqBehavior(assumedParams, betaMat);
 
 % Calculate loss from agents assumming wrong slope
-inducedCrashProb = GetCrashProb(actualSlopeMat, b, inducedxn, inducedxvu, inducedxvs, trueSignalProbFn, falseSignalProbFn, V2VMass, betaMat); 
+actualSlopeMat = assumedSlopeMat.';
+trueParamsMat = WorldParams(actualSlopeMat, b, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
+inducedCrashProb = GetCrashProb(trueParamsMat, inducedBehavior, betaMat); 
 loss = inducedCrashProb - repmat(squeeze(optimalCrashProb), 100, 1).';
 
 % Plot
