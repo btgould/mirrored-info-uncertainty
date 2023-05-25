@@ -1,4 +1,4 @@
-function [crashProbWCertainty, crashProbWUncertainty] = AgentSlopeUncertainty(yInt, trueSignalProbFn, falseSignalProbFn, V2VMass, crashCost, granularity)
+function [crashProbWCertainty, crashProbWUncertainty] = AgentSlopeUncertainty(worldParams, granularity)
 	% Goal of this script: Assume crash prob is linear: p(x) = ax + b.
 	% Agents think they know the value of a, call it a_* (Signaling designer
 	% knows the true value). Signaling designer calculates optimal (accident
@@ -7,17 +7,20 @@ function [crashProbWCertainty, crashProbWUncertainty] = AgentSlopeUncertainty(yI
 	% chosen value of beta. We calculate the new accident probability caused
 	% by the "bad guess" by the agents.
 	arguments (Input)
-		yInt double{mustBeInRange(yInt, 0, 1, "exclude-upper")}
-		trueSignalProbFn(1, 1) function_handle
-		falseSignalProbFn(1, 1) function_handle
-		V2VMass double{mustBeInRange(V2VMass, 0, 1)}
-		crashCost double{mustBeGreaterThan(crashCost, 1)}
+		worldParams(1, 1) WorldParams
 		granularity(1, 1) uint32{mustBePositive} = 100
 	end
 	arguments (Output)
 		crashProbWCertainty double
 		crashProbWUncertainty double
 	end
+
+	% Aliases
+	yInt = worldParams.yInt;
+	V2VMass = worldParams.V2VMass;
+	crashCost = worldParams.crashCost;
+	trueSignalProbFn = worldParams.trueSignalProbFn;
+	falseSignalProbFn = worldParams.falseSignalProbFn;
 
 	% Calculate optimal beta for each true value of a
 	slopes = linspace(0, 1-yInt, granularity);

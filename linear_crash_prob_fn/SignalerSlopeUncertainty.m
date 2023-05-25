@@ -1,4 +1,4 @@
-function [crashProbWCertainty, crashProbWUncertainty] = SignalerSlopeUncertainty(yInt, trueSignalProbFn, falseSignalProbFn, V2VMass, crashCost, granularity)
+function [crashProbWCertainty, crashProbWUncertainty] = SignalerSlopeUncertainty(worldParams, granularity)
 	% Goal of this script: Assume crash prob is linear: p(x) = ax + b.
 	% Signaling designer thinks they know the value of a, call it a_*. We then
 	% calculate the optimal (accident minimizing) value of beta assuming p(x) =
@@ -7,17 +7,20 @@ function [crashProbWCertainty, crashProbWUncertainty] = SignalerSlopeUncertainty
 	% values of a != a_*, and plot the increase in accident probability caused
 	% by the "bad guess" by the signaling designer.
 	arguments (Input)
-		yInt double{mustBeInRange(yInt, 0, 1, "exclude-upper")}
-		trueSignalProbFn(1, 1) function_handle
-		falseSignalProbFn(1, 1) function_handle
-		V2VMass double{mustBeInRange(V2VMass, 0, 1)}
-		crashCost double{mustBeGreaterThan(crashCost, 1)}
+		worldParams(1, 1) WorldParams
 		granularity(1, 1) uint32{mustBePositive} = 100
 	end
 	arguments (Output)
 		crashProbWCertainty double
 		crashProbWUncertainty double
 	end
+
+	% Aliases
+	yInt = worldParams.yInt;
+	V2VMass = worldParams.V2VMass;
+	crashCost = worldParams.crashCost;
+	trueSignalProbFn = worldParams.trueSignalProbFn;
+	falseSignalProbFn = worldParams.falseSignalProbFn;
 
 	% Calculate optimal beta for each assumed slope
 	slopes = linspace(0, 1-yInt, granularity);

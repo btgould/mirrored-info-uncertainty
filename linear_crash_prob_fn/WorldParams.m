@@ -1,9 +1,9 @@
 classdef WorldParams
 	properties
-		slope double{mustBeReal}
-		yInt double{mustBeReal}
-		V2VMass double{mustBeReal}
-		crashCost double{mustBeReal}
+		slope double{mustBeInRange(slope, 0, 1)}
+		yInt double{mustBeInRange(yInt, 0, 1, "exclude-upper")}
+		V2VMass double{mustBeInRange(V2VMass, 0, 1)}
+		crashCost double{mustBeGreaterThanOrEqual(crashCost, 1)}
 
 		trueSignalProbFn function_handle
 		falseSignalProbFn function_handle
