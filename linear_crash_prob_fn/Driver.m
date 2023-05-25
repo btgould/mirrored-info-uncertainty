@@ -73,6 +73,11 @@ function [ahl, ahb] = agentHeatmaps(worldParams)
 	xlabel("Assumed slope");
 	ylabel("Actual slope");
 
+	colors = [255, 75, 75; 255, 255, 255; 1, 114, 189] ./ 255;
+	samples = [min(loss, [], 'all'), 0, max(loss, [], 'all')];
+	map = interp1(samples, colors, linspace(min(loss, [], 'all'), max(loss, [], 'all'), size(loss, 1)));
+	ahl.Colormap = map;
+
 	subplot(1, 2, 2);
 	ahb = heatmap(double(loss < 0), "GridVisible", false);
 	title("Where Agent Slope Uncertainty is Beneficial");
@@ -81,6 +86,7 @@ function [ahl, ahb] = agentHeatmaps(worldParams)
 end
 
 function UpdateLosses(sh, ahl, ahb, worldParams)
+	% Recalculate data
 	[crashProbWCertainty, crashProbWUncertainty] = SignalerSlopeUncertainty(worldParams);
 	signalerLoss = crashProbWUncertainty - crashProbWCertainty;
 	sh.ColorData = signalerLoss;
@@ -89,6 +95,24 @@ function UpdateLosses(sh, ahl, ahb, worldParams)
 	agentLoss = crashProbWUncertainty - crashProbWCertainty;
 	ahl.ColorData = agentLoss;
 	ahb.ColorData = double(agentLoss < 0);
+
+	% Renormalize colormap
+	colors = [255, 75, 75; 255, 255, 255; 1, 114, 189] ./ 255;
+	samples = [min(agentLoss, [], 'all'), 0, max(agentLoss, [], 'all')];
+	if min(agentLoss, [], 'all') >= 0
+		samples = samples(2:end);
+		colors = colors(2:end, :);
+	end
+	if max(agentLoss, [], 'all') <= 0
+		samples = samples(1:end-1);
+		colors = colors(1:end-1, :);
+	end
+	if size(samples, 2) > 1
+		map = interp1(samples, colors, linspace(min(agentLoss, [], 'all'), max(agentLoss, [], 'all'), size(agentLoss, 1)));
+	else
+		map = [1, 1, 1];
+	end
+	ahl.Colormap = map;
 
 	drawnow;
 end
