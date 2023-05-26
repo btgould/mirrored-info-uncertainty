@@ -31,7 +31,7 @@ function [crashProbWCertainty, crashProbWUncertainty] = AgentSlopeUncertainty(wo
 	% Get agent behavior decisions for incorrect guesses of a
 	[assumedSlopeMat, betaMat] = meshgrid(slopes, optimalBeta); % Note: we swapped the order of the meshgrid from signaler uncertainty to keep assumption on horiz axis
 	assumedParams = WorldParams(assumedSlopeMat, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
-	inducedBehavior = GetEqBehavior(assumedParams, betaMat);
+	[inducedBehavior, eqs] = GetEqBehavior(assumedParams, betaMat);
 
 	% Calculate loss from agents assumming wrong slope
 	actualSlopeMat = assumedSlopeMat.';

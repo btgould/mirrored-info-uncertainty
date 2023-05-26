@@ -1,10 +1,11 @@
-function behavior = GetEqBehavior(worldParams, beta)
+function [behavior, eqs] = GetEqBehavior(worldParams, beta)
 	arguments (Input)
 		worldParams WorldParams
 		beta double
 	end
 	arguments (Output)
 		behavior Behavior
+		eqs double
 	end
 
 	ty = worldParams.trueSignalProbFn(worldParams.V2VMass);
@@ -32,6 +33,15 @@ function behavior = GetEqBehavior(worldParams, beta)
 	E5 = E4U < Pn & Pvs < E5U;
 	E6 = E5U <= Pvs & Pvs <= E6U;
 	E7 = E6U < Pvs;
+
+	eqs = zeros(size(E1));
+	eqs(E1) = 1;
+	eqs(E2) = 2;
+	eqs(E3) = 3;
+	eqs(E4) = 4;
+	eqs(E5) = 5;
+	eqs(E6) = 6;
+	eqs(E7) = 7;
 
 	% Describe eq behavior in each region
 	xvu = zeros(size(worldParams.slope));
