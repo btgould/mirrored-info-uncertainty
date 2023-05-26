@@ -1,12 +1,10 @@
 clear;
-trueSignalProbFn = @(y) 0.8 .* y;
-falseSignalProbFn = @(y) 0.1 .* y;
 wp = WorldParams(0, 0.1, 0.9, 3, @(y) 0.8.*y, @(y) 0.1.*y);
 
-ShowUI(wp, trueSignalProbFn, falseSignalProbFn);
+ShowUI(wp);
 
 %% Helper Functions
-function ShowUI(worldParams, trueSignalProbFn, falseSignalProbFn)
+function ShowUI(worldParams)
 	uifig = uifigure();
 	g = uigridlayout(uifig, [3, 2]);
 	g.ColumnWidth = {'1x', '2x'};
@@ -43,11 +41,11 @@ function ShowUI(worldParams, trueSignalProbFn, falseSignalProbFn)
 
 	% Slider function hooks
 	yIntSlider.ValueChangingFcn = @(src, event) UpdateLosses(sh, ahl, ahb, ...
-		WorldParams(0, event.Value, V2VMassSlider.Value, crashCostSlider.Value, trueSignalProbFn, falseSignalProbFn));
+		worldParams.UpdateYInt(event.Value));
 	V2VMassSlider.ValueChangingFcn = @(src, event) UpdateLosses(sh, ahl, ahb, ...
-		WorldParams(0, yIntSlider.Value, event.Value, crashCostSlider.Value, trueSignalProbFn, falseSignalProbFn));
+		worldParams.UpdateV2VMass(event.Value));
 	crashCostSlider.ValueChangingFcn = @(src, event) UpdateLosses(sh, ahl, ahb, ...
-		WorldParams(0, yIntSlider.Value, V2VMassSlider.Value, event.Value, trueSignalProbFn, falseSignalProbFn));
+		worldParams.UpdateCrashCost(event.Value));
 end
 
 function sh = signalerHeatmap(worldParams)

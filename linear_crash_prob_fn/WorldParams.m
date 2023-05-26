@@ -1,4 +1,4 @@
-classdef WorldParams
+classdef WorldParams < handle
 	properties
 		slope double{mustBeInRange(slope, 0, 1)}
 		yInt double{mustBeInRange(yInt, 0, 1, "exclude-upper")}
@@ -17,6 +17,15 @@ classdef WorldParams
 
 			obj.trueSignalProbFn = trueSignalProbFn;
 			obj.falseSignalProbFn = falseSignalProbFn;
+		end
+		function obj = UpdateYInt(obj, newYInt)
+			obj.yInt = newYInt;
+		end
+		function obj = UpdateV2VMass(obj, newV2VMass)
+			obj.V2VMass = newV2VMass;
+		end
+		function obj = UpdateCrashCost(obj, newCrashCost)
+			obj.crashCost = newCrashCost;
 		end
 	end
 end
