@@ -38,20 +38,19 @@ signalerFig.Position(3:4) = [1120, 720];
 subplot(2, 2, 1);
 uiHeatmaps.signalerHeatmap = heatmap(0, "GridVisible", false);
 title("Loss Caused by Signaler Slope Uncertainty")
-xlabel("Assumed slope");
-ylabel("Actual slope");
+xlabel("Assumed Slope");
+ylabel("Actual Slope");
 
 subplot(2, 2, 3);
 uiHeatmaps.signalerActualEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
 title("Realized Equilibria")
-xlabel("Assumed slope");
-ylabel("Actual slope");
+xlabel("Signaler Assumed Slope");
+ylabel("Actual Slope");
 
 subplot(2, 2, 4);
 uiHeatmaps.signalerAssumedEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
-title("Signaler Assumed Equilibria")
-xlabel("Assumed slope");
-ylabel("Actual slope");
+title("Signaler Anticipated Equilibria")
+xlabel("Assumed Slope");
 
 % Agent heatmaps
 agentFig = figure();
@@ -60,26 +59,25 @@ agentFig.Position(3:4) = [1120, 720];
 subplot(2, 2, 1);
 uiHeatmaps.agentLossHeatmap = heatmap(0, "GridVisible", false);
 title("Loss Caused by Agent Slope Uncertainty");
-xlabel("Assumed slope");
-ylabel("Actual slope");
+xlabel("Assumed Slope");
+ylabel("Actual Slope");
 
 subplot(2, 2, 2);
 uiHeatmaps.agentBenefitHeatmap = heatmap(0, "GridVisible", false);
 title("Where Agent Slope Uncertainty is Beneficial");
-xlabel("Assumed slope");
-ylabel("Actual slope");
+xlabel("Assumed Slope");
+ylabel("Actual Slope");
 
 subplot(2, 2, 3);
-uiHeatmaps.agentActualEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
-title("Realized Equilibria");
-xlabel("Assumed slope");
-ylabel("Actual slope");
+uiHeatmaps.agentAnticipatedEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
+title("Signaler Anticipated Equilibria");
+ylabel("Slope");
 
 subplot(2, 2, 4);
-uiHeatmaps.agentAssumedEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
-title("Agent Assumed Equilibria"); % TODOL what are the axis titles actually here?
-xlabel("Assumed slope");
-ylabel("Actual slope");
+uiHeatmaps.agentRealizedEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
+title("Realized Equilibria");
+xlabel("Agent Assumed Slope");
+ylabel("Actual Slope");
 
 UpdateLosses(uiHeatmaps, worldParams);
 
@@ -106,8 +104,8 @@ function UpdateLosses(uiHeatmaps, worldParams)
 	agentLoss = crashProbWUncertainty - crashProbWCertainty;
 	uiHeatmaps.agentLossHeatmap.ColorData = agentLoss;
 	uiHeatmaps.agentBenefitHeatmap.ColorData = double(agentLoss < 0);
-	uiHeatmaps.agentActualEqHeatmap.ColorData = actualEqs;
-	uiHeatmaps.agentAssumedEqHeatmap.ColorData = assumedEqs;
+	uiHeatmaps.agentAnticipatedEqHeatmap.ColorData = actualEqs.';
+	uiHeatmaps.agentRealizedEqHeatmap.ColorData = assumedEqs;
 
 	% Renormalize colormaps
 	colors = [255, 75, 75; 255, 255, 255; 1, 114, 189] ./ 255;
@@ -121,8 +119,8 @@ function UpdateLosses(uiHeatmaps, worldParams)
 	eqMap = LabelledColormap(points, colors, assumedEqs);
 	uiHeatmaps.signalerActualEqHeatmap.Colormap = eqMap;
 	uiHeatmaps.signalerAssumedEqHeatmap.Colormap = eqMap;
-	uiHeatmaps.agentActualEqHeatmap.Colormap = eqMap;
-	uiHeatmaps.agentAssumedEqHeatmap.Colormap = eqMap;
+	uiHeatmaps.agentAnticipatedEqHeatmap.Colormap = eqMap;
+	uiHeatmaps.agentRealizedEqHeatmap.Colormap = eqMap;
 
 	drawnow;
 end
