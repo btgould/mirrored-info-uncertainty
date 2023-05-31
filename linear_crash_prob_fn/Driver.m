@@ -36,19 +36,19 @@ signalerFig = figure();
 signalerFig.Position(3:4) = [1120, 720];
 
 subplot(2, 2, 1);
-uiHeatmaps.signalerHeatmap = heatmap(0, "GridVisible", false);
+uiHeatmaps.signalerLossHeatmap = heatmap(0, "GridVisible", false);
 title("Loss Caused by Signaler Slope Uncertainty")
 xlabel("Assumed Slope");
 ylabel("Actual Slope");
 
 subplot(2, 2, 3);
-uiHeatmaps.signalerActualEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
+uiHeatmaps.surEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
 title("Realized Equilibria")
 xlabel("Signaler Assumed Slope");
 ylabel("Actual Slope");
 
 subplot(2, 2, 4);
-uiHeatmaps.signalerAssumedEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
+uiHeatmaps.susaEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
 title("Signaler Anticipated Equilibria")
 xlabel("Assumed Slope");
 
@@ -69,13 +69,13 @@ xlabel("Assumed Slope");
 ylabel("Actual Slope");
 
 subplot(2, 2, 3);
-uiHeatmaps.agentAnticipatedEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
+uiHeatmaps.ausaEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
 title("Signaler Anticipated Equilibria");
 ylabel("Slope");
 
 subplot(2, 2, 4);
-uiHeatmaps.agentRealizedEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
-title("Realized Equilibria");
+uiHeatmaps.auaaEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
+title("Agent Anticipated Equilibria");
 xlabel("Agent Assumed Slope");
 ylabel("Actual Slope");
 
@@ -95,17 +95,17 @@ function UpdateLosses(uiHeatmaps, worldParams)
 	[crashProbWCertainty, crashProbWUncertainty, actualEqs, assumedEqs] = ...
 		SignalerSlopeUncertainty(worldParams);
 	signalerLoss = crashProbWUncertainty - crashProbWCertainty;
-	uiHeatmaps.signalerHeatmap.ColorData = signalerLoss;
-	uiHeatmaps.signalerActualEqHeatmap.ColorData = actualEqs;
-	uiHeatmaps.signalerAssumedEqHeatmap.ColorData = assumedEqs;
+	uiHeatmaps.signalerLossHeatmap.ColorData = signalerLoss;
+	uiHeatmaps.surEqHeatmap.ColorData = actualEqs;
+	uiHeatmaps.susaEqHeatmap.ColorData = assumedEqs;
 
-	[crashProbWCertainty, crashProbWUncertainty, actualEqs, assumedEqs] = ...
+	[crashProbWCertainty, crashProbWUncertainty, signalerAnticipatedEqs, agentAnticipatedEqs] = ...
 		AgentSlopeUncertainty(worldParams);
 	agentLoss = crashProbWUncertainty - crashProbWCertainty;
 	uiHeatmaps.agentLossHeatmap.ColorData = agentLoss;
 	uiHeatmaps.agentBenefitHeatmap.ColorData = double(agentLoss < 0);
-	uiHeatmaps.agentAnticipatedEqHeatmap.ColorData = actualEqs.';
-	uiHeatmaps.agentRealizedEqHeatmap.ColorData = assumedEqs;
+	uiHeatmaps.ausaEqHeatmap.ColorData = signalerAnticipatedEqs.';
+	uiHeatmaps.auaaEqHeatmap.ColorData = agentAnticipatedEqs;
 
 	% Renormalize colormaps
 	colors = [255, 75, 75; 255, 255, 255; 1, 114, 189] ./ 255;
@@ -117,10 +117,10 @@ function UpdateLosses(uiHeatmaps, worldParams)
 		252, 173, 3; 255, 0, 0; 244, 3, 252] ./ 255;
 	points = [1, 2, 3, 4, 5, 6, 7];
 	eqMap = LabelledColormap(points, colors, assumedEqs);
-	uiHeatmaps.signalerActualEqHeatmap.Colormap = eqMap;
-	uiHeatmaps.signalerAssumedEqHeatmap.Colormap = eqMap;
-	uiHeatmaps.agentAnticipatedEqHeatmap.Colormap = eqMap;
-	uiHeatmaps.agentRealizedEqHeatmap.Colormap = eqMap;
+	uiHeatmaps.surEqHeatmap.Colormap = eqMap;
+	uiHeatmaps.susaEqHeatmap.Colormap = eqMap;
+	uiHeatmaps.ausaEqHeatmap.Colormap = eqMap;
+	uiHeatmaps.auaaEqHeatmap.Colormap = eqMap;
 
 	drawnow;
 end
