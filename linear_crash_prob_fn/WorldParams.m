@@ -27,5 +27,11 @@ classdef WorldParams < handle
 		function obj = UpdateCrashCost(obj, newCrashCost)
 			obj.crashCost = newCrashCost;
 		end
+		function obj = UpdateTrueSignalProbFn(obj, newFn)
+			obj.trueSignalProbFn = newFn;
+		end
+		function obj = UpdateFalseSignalProbFn(obj, newFn)
+			obj.falseSignalProbFn = newFn;
+		end
 	end
 end

@@ -33,12 +33,12 @@ function [crashProbWCertainty, crashProbWUncertainty, signalerAnticipatedEqs, ag
 	% Get agent behavior decisions for incorrect guesses of a
 	[assumedSlopeMat, betaMat] = meshgrid(slopes, optimalBeta); % Note: we swapped the order of the meshgrid from signaler uncertainty to keep assumption on horiz axis
 	assumedParams = WorldParams(assumedSlopeMat, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
-	[inducedBehavior, agentAnticipatedEqs] = GetEqBehavior(assumedParams, betaMat); % TODO: why is realizedEqs calculated with assumedSlopeMat??? 
+	[inducedBehavior, agentAnticipatedEqs] = GetEqBehavior(assumedParams, betaMat); % TODO: why is realizedEqs calculated with assumedSlopeMat???
 
 	% Calculate loss from agents assumming wrong slope
 	actualSlopeMat = assumedSlopeMat.'; % Transpose to get Cartesian product
 	trueParamsMat = WorldParams(actualSlopeMat, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
-	% Can I even say that the behavoir chosen by misinformed agents is an
-	% equilibrium?? 
+	% Can I even say that the behavior chosen by misinformed agents is an
+	% equilibrium??
 	crashProbWUncertainty = GetCrashProb(trueParamsMat, inducedBehavior, betaMat);
 end
