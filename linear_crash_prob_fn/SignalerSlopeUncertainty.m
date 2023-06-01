@@ -1,4 +1,4 @@
-function [crashProbWCertainty, crashProbWUncertainty, realizedEqs, anticipatedEqs] = SignalerSlopeUncertainty(worldParams, granularity)
+function [anticipatedCrashProb, realizedCrashProb, anticipatedEqs, realizedEqs, anticipatedSocialCost, realizedSocialCost] = SignalerSlopeUncertainty(worldParams, granularity)
 	% Goal of this script: Assume crash prob is linear: p(x) = ax + b.
 	% Signaling designer thinks they know the value of a, call it a_*. We then
 	% calculate the optimal (accident minimizing) value of beta assuming p(x) =
@@ -11,10 +11,12 @@ function [crashProbWCertainty, crashProbWUncertainty, realizedEqs, anticipatedEq
 		granularity(1, 1) uint32{mustBePositive} = 100
 	end
 	arguments (Output)
-		crashProbWCertainty double
-		crashProbWUncertainty double
-		realizedEqs double
+		anticipatedCrashProb double
+		realizedCrashProb double
 		anticipatedEqs double
+		realizedEqs double
+		anticipatedSocialCost double
+		realizedSocialCost double
 	end
 
 	% Aliases
@@ -27,12 +29,15 @@ function [crashProbWCertainty, crashProbWUncertainty, realizedEqs, anticipatedEq
 	% Calculate optimal beta for each assumed slope
 	slopes = linspace(0, 1-yInt, granularity);
 	assumedParams = WorldParams(slopes, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
-	[optimalBeta, optimalCrashProb, anticipatedEqs] = GetOptimalBeta(assumedParams);
-	crashProbWCertainty = repmat(squeeze(optimalCrashProb), granularity, 1).';
+	[chosenBeta, anticipatedCrashProb, anticipatedEqs] = GetOptimalBeta(assumedParams);
+	anticipatedSocialCost = GetSocialCost(assumedParams, chosenBeta, GetEqBehavior(assumedParams, chosenBeta), anticipatedCrashProb);
+
+	anticipatedCrashProb = repmat(squeeze(anticipatedCrashProb), granularity, 1).';
 
 	% Calculate loss of assumed optimal beta on different slopes
-	[betaMat, slopeMat] = meshgrid(optimalBeta, slopes);
+	[betaMat, slopeMat] = meshgrid(chosenBeta, slopes);
 	trueParams = WorldParams(slopeMat, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 	[inducedBehavior, realizedEqs] = GetEqBehavior(trueParams, betaMat);
-	crashProbWUncertainty = GetCrashProb(trueParams, inducedBehavior, betaMat);
+	realizedCrashProb = GetCrashProb(trueParams, inducedBehavior, betaMat);
+	realizedSocialCost = GetSocialCost(trueParams, betaMat, inducedBehavior, realizedCrashProb);
 end

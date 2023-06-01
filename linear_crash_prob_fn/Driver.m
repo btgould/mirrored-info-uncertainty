@@ -59,6 +59,12 @@ title("Loss Caused by Signaler Slope Uncertainty")
 xlabel("Assumed Slope");
 ylabel("Actual Slope");
 
+subplot(2, 2, 2);
+uiComponents.signalerSCLossHeatmap = heatmap(0, "GridVisible", false);
+title("SC Loss Caused by Signaler Slope Uncertainty");
+xlabel("Assumed Slope");
+ylabel("Actual Slope");
+
 subplot(2, 2, 3);
 uiComponents.surEqHeatmap = heatmap(0, "GridVisible", false, "ColorLimits", [1, 7]);
 title("Realized Equilibria")
@@ -81,8 +87,8 @@ xlabel("Assumed Slope");
 ylabel("Actual Slope");
 
 subplot(2, 2, 2);
-uiComponents.agentBenefitHeatmap = heatmap(0, "GridVisible", false);
-title("Where Agent Slope Uncertainty is Beneficial");
+uiComponents.agentSCLossHeatmap = heatmap(0, "GridVisible", false);
+title("SC Loss Caused by Agent Slope Uncertainty");
 xlabel("Assumed Slope");
 ylabel("Actual Slope");
 
@@ -114,18 +120,21 @@ falseSpFnSlider.ValueChangingFcn = @(src, event) UpdateLosses(uiComponents, ...
 %% Helper Functions
 function UpdateLosses(uiComponents, worldParams)
 	% Recalculate data
-	[crashProbWCertainty, crashProbWUncertainty, actualEqs, assumedEqs] = ...
+	[anticipatedCrashProb, realizedCrashProb, anticipatedEqs, realizedEqs, anticipatedSocialCost, realizedSocialCost] = ...
 		SignalerSlopeUncertainty(worldParams);
-	signalerLoss = crashProbWUncertainty - crashProbWCertainty;
+	signalerLoss = realizedCrashProb - anticipatedCrashProb;
+	signalerSCLoss = realizedSocialCost - anticipatedSocialCost;
 	uiComponents.signalerLossHeatmap.ColorData = signalerLoss;
-	uiComponents.surEqHeatmap.ColorData = actualEqs;
-	uiComponents.susaEqHeatmap.ColorData = assumedEqs;
+	uiComponents.signalerSCLossHeatmap.ColorData = signalerSCLoss;
+	uiComponents.surEqHeatmap.ColorData = realizedEqs;
+	uiComponents.susaEqHeatmap.ColorData = anticipatedEqs;
 
-	[crashProbWCertainty, crashProbWUncertainty, signalerAnticipatedEqs, agentAnticipatedEqs] = ...
+	[signalerAnticipatedCrashProb, realizedCrashProb, signalerAnticipatedEqs, agentAnticipatedEqs, anticipatedSocialCost, realizedSocialCost] = ...
 		AgentSlopeUncertainty(worldParams);
-	agentLoss = crashProbWUncertainty - crashProbWCertainty;
+	agentLoss = realizedCrashProb - signalerAnticipatedCrashProb;
+	agentSCLoss = realizedSocialCost - anticipatedSocialCost;
 	uiComponents.agentLossHeatmap.ColorData = agentLoss;
-	uiComponents.agentBenefitHeatmap.ColorData = double(agentLoss < 0);
+	uiComponents.agentSCLossHeatmap.ColorData = agentSCLoss;
 	uiComponents.ausaEqHeatmap.ColorData = signalerAnticipatedEqs.';
 	uiComponents.auaaEqHeatmap.ColorData = agentAnticipatedEqs;
 
@@ -135,10 +144,18 @@ function UpdateLosses(uiComponents, worldParams)
 	lossMap = LabelledColormap(points, colors, agentLoss);
 	uiComponents.agentLossHeatmap.Colormap = lossMap;
 
+	points = [min(signalerSCLoss, [], 'all'), 0, max(signalerSCLoss, [], 'all')];
+	lossMap = LabelledColormap(points, colors, signalerSCLoss);
+	uiComponents.signalerSCLossHeatmap.Colormap = lossMap;
+
+	points = [min(agentSCLoss, [], 'all'), 0, max(agentSCLoss, [], 'all')];
+	lossMap = LabelledColormap(points, colors, agentSCLoss);
+	uiComponents.agentSCLossHeatmap.Colormap = lossMap;
+
 	colors = [119, 3, 252; 0, 3, 255; 0, 255, 0; 255, 255, 255; ...
 		252, 173, 3; 255, 0, 0; 244, 3, 252] ./ 255;
 	points = [1, 2, 3, 4, 5, 6, 7];
-	eqMap = LabelledColormap(points, colors, assumedEqs);
+	eqMap = LabelledColormap(points, colors, anticipatedEqs);
 	uiComponents.surEqHeatmap.Colormap = eqMap;
 	uiComponents.susaEqHeatmap.Colormap = eqMap;
 	uiComponents.ausaEqHeatmap.Colormap = eqMap;
