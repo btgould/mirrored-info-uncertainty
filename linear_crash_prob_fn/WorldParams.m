@@ -18,6 +18,9 @@ classdef WorldParams < handle
 			obj.trueSignalProbFn = trueSignalProbFn;
 			obj.falseSignalProbFn = falseSignalProbFn;
 		end
+		function obj = UpdateSlope(obj, newSlope)
+			obj.slope = newSlope;
+		end
 		function obj = UpdateYInt(obj, newYInt)
 			obj.yInt = newYInt;
 		end
