@@ -62,7 +62,7 @@ uiComponents.falseSpFnSlider = falseSpFnSlider;
 fig = figure();
 p = plot(linspace(1, 2, 100));
 p.Parent.YLim = [0, 1];
-CrashProbForPlot(p, worldParams);
+[crashProbs, behavior] = CrashProbForPlot(p, worldParams);
 
 % Slider function hooks
 slopeSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
@@ -78,7 +78,7 @@ trueSpFnSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
 falseSpFnSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
 	worldParams.UpdateFalseSignalProbFn(@(y) event.Value.*y));
 
-function crashProbs = CrashProbForPlot(plot, worldParams)
+function [crashProbs, behavior] = CrashProbForPlot(plot, worldParams)
 	beta = linspace(0, 1, 100);
 
 	behavior = GetEqBehavior(worldParams, beta);

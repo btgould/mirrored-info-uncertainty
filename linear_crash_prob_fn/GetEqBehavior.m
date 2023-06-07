@@ -22,8 +22,8 @@ function [behavior, eqs] = GetEqBehavior(worldParams, beta)
 	E1U = zeros(size(worldParams.slope)) + worldParams.yInt; % p(0)
 	E2U = worldParams.slope .* ((1 - beta .* Pvu .* (ty - fy) - beta .* fy) .* worldParams.V2VMass) + worldParams.yInt;
 	E3U = worldParams.slope .* ((1 - beta .* Pn .* (ty - fy) - beta .* fy) .* worldParams.V2VMass) + worldParams.yInt;
-	E4U = worldParams.slope .* (1 - (beta .* Pn .* (ty - fy) - beta .* fy) .* worldParams.V2VMass) + worldParams.yInt;
-	E5U = worldParams.slope .* (1 - (beta .* Pvs .* (ty - fy) - beta .* fy) .* worldParams.V2VMass) + worldParams.yInt;
+	E4U = worldParams.slope .* (1 - (beta .* Pn .* (ty - fy) + beta .* fy) .* worldParams.V2VMass) + worldParams.yInt;
+	E5U = worldParams.slope .* (1 - (beta .* Pvs .* (ty - fy) + beta .* fy) .* worldParams.V2VMass) + worldParams.yInt;
 	E6U = worldParams.slope + worldParams.yInt; % p(1)
 
 	E1 = Pvu < E1U;
