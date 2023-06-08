@@ -187,6 +187,7 @@ function SCBreakdown(worldParams)
 	xlabel("Assumed Slope");
 	ylabel("Actual Slope");
 	zlabel("Social Cost");
+	legend("Regret Cost", "Accident Cost");
 
 	[~, ~, ~, ~, ~, realizedSocialCost] = ...
 		AgentSlopeUncertainty(worldParams);
@@ -199,4 +200,5 @@ function SCBreakdown(worldParams)
 	xlabel("Assumed Slope");
 	ylabel("Actual Slope");
 	zlabel("Social Cost");
+	legend("Regret Cost", "Accident Cost");
 end
