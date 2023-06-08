@@ -3,9 +3,9 @@ worldParams = WorldParams(0, 0.1, 0.9, 3, @(y) 0.8.*y, @(y) 0.1.*y);
 
 % UI / control stuff
 uifig = uifigure();
-g = uigridlayout(uifig, [5, 2]);
+g = uigridlayout(uifig, [6, 2]);
 g.ColumnWidth = {'1x', '2x'};
-g.RowHeight = {50, 50, 50, 50, 50};
+g.RowHeight = {50, 50, 50, 50, 50, 50};
 
 yIntLbl = uilabel(g, "Text", "y-intercept");
 yIntLbl.Layout.Row = 1;
@@ -48,6 +48,12 @@ falseSpFnSlider.Layout.Row = 5;
 falseSpFnSlider.Layout.Column = 2;
 falseSpFnSlider.Value = worldParams.falseSignalProbFn(1);
 uiComponents.falseSpFnSlider = falseSpFnSlider;
+
+scBreakdownBtn = uibutton(g);
+scBreakdownBtn.Layout.Row = 6;
+scBreakdownBtn.Layout.Column = 1;
+scBreakdownBtn.Text = "View Social Cost Breakdown";
+scBreakdownBtn.ButtonPushedFcn = @(src, event) SCBreakdown(worldParams);
 
 % Signaler heatmap
 signalerFig = figure();
@@ -123,7 +129,7 @@ function UpdateLosses(uiComponents, worldParams)
 	[anticipatedCrashProb, realizedCrashProb, anticipatedEqs, realizedEqs, anticipatedSocialCost, realizedSocialCost] = ...
 		SignalerSlopeUncertainty(worldParams);
 	signalerLoss = realizedCrashProb - anticipatedCrashProb;
-	signalerSCLoss = realizedSocialCost - anticipatedSocialCost;
+	signalerSCLoss = realizedSocialCost.total - anticipatedSocialCost.total;
 	uiComponents.signalerLossHeatmap.ColorData = signalerLoss;
 	uiComponents.signalerSCLossHeatmap.ColorData = signalerSCLoss;
 	uiComponents.surEqHeatmap.ColorData = realizedEqs;
@@ -132,7 +138,7 @@ function UpdateLosses(uiComponents, worldParams)
 	[signalerAnticipatedCrashProb, realizedCrashProb, signalerAnticipatedEqs, agentAnticipatedEqs, anticipatedSocialCost, realizedSocialCost] = ...
 		AgentSlopeUncertainty(worldParams);
 	agentLoss = realizedCrashProb - signalerAnticipatedCrashProb;
-	agentSCLoss = realizedSocialCost - anticipatedSocialCost;
+	agentSCLoss = realizedSocialCost.total - anticipatedSocialCost.total;
 	uiComponents.agentLossHeatmap.ColorData = agentLoss;
 	uiComponents.agentSCLossHeatmap.ColorData = agentSCLoss;
 	uiComponents.ausaEqHeatmap.ColorData = signalerAnticipatedEqs.';
@@ -165,4 +171,32 @@ function UpdateLosses(uiComponents, worldParams)
 	uiComponents.falseSpFnSlider.Limits = [0, uiComponents.trueSpFnSlider.Value];
 
 	drawnow;
+end
+
+function SCBreakdown(worldParams)
+	figure;
+
+	[~, ~, ~, ~, ~, realizedSocialCost] = ...
+		SignalerSlopeUncertainty(worldParams);
+
+	subplot(1, 2, 1);
+	hold on;
+	surf(realizedSocialCost.regretCost, "FaceColor", "blue");
+	surf(realizedSocialCost.accidentCost, "FaceColor", "red");
+	title("Social Cost for Signaler Uncertainty");
+	xlabel("Assumed Slope");
+	ylabel("Actual Slope");
+	zlabel("Social Cost");
+
+	[~, ~, ~, ~, ~, realizedSocialCost] = ...
+		AgentSlopeUncertainty(worldParams);
+
+	subplot(1, 2, 2);
+	hold on;
+	surf(realizedSocialCost.regretCost, "FaceColor", "blue");
+	surf(realizedSocialCost.accidentCost, "FaceColor", "red");
+	title("Social Cost for Signaler Uncertainty");
+	xlabel("Assumed Slope");
+	ylabel("Actual Slope");
+	zlabel("Social Cost");
 end

@@ -15,8 +15,8 @@ function [signalerAnticipatedCrashProb, realizedCrashProb, signalerAnticipatedEq
 		realizedCrashProb double
 		signalerAnticipatedEqs double
 		agentAnticipatedEqs double
-		signalerAnticipatedSocialCost double
-		realizedSocialCost double
+		signalerAnticipatedSocialCost SocialCost
+		realizedSocialCost SocialCost
 	end
 
 	% Aliases

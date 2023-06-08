@@ -15,8 +15,8 @@ function [anticipatedCrashProb, realizedCrashProb, anticipatedEqs, realizedEqs, 
 		realizedCrashProb double
 		anticipatedEqs double
 		realizedEqs double
-		anticipatedSocialCost double
-		realizedSocialCost double
+		anticipatedSocialCost SocialCost
+		realizedSocialCost SocialCost
 	end
 
 	% Aliases
