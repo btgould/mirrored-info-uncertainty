@@ -126,23 +126,24 @@ falseSpFnSlider.ValueChangingFcn = @(src, event) UpdateLosses(uiComponents, ...
 %% Helper Functions
 function UpdateLosses(uiComponents, worldParams)
 	% Recalculate data
-	[anticipatedCrashProb, realizedCrashProb, anticipatedEqs, realizedEqs, anticipatedSocialCost, realizedSocialCost] = ...
-		SignalerSlopeUncertainty(worldParams);
-	signalerLoss = realizedCrashProb - anticipatedCrashProb;
-	signalerSCLoss = realizedSocialCost.total - anticipatedSocialCost.total;
+	[signalerAnticipatedOutcome, realizedOutcome] = SignalerSlopeUncertainty(worldParams);
+	signalerLoss = realizedOutcome.crashProb - signalerAnticipatedOutcome.crashProb;
+	signalerSCLoss = realizedOutcome.socialCost.total - ...
+		signalerAnticipatedOutcome.socialCost.total;
 	uiComponents.signalerLossHeatmap.ColorData = signalerLoss;
 	uiComponents.signalerSCLossHeatmap.ColorData = signalerSCLoss;
-	uiComponents.surEqHeatmap.ColorData = realizedEqs;
-	uiComponents.susaEqHeatmap.ColorData = anticipatedEqs;
+	uiComponents.surEqHeatmap.ColorData = realizedOutcome.eqs;
+	uiComponents.susaEqHeatmap.ColorData = signalerAnticipatedOutcome.eqs;
 
-	[signalerAnticipatedCrashProb, realizedCrashProb, signalerAnticipatedEqs, agentAnticipatedEqs, anticipatedSocialCost, realizedSocialCost] = ...
+	[signalerAnticipatedOutcome, agentAnticipatedOutcome, realizedOutcome] = ...
 		AgentSlopeUncertainty(worldParams);
-	agentLoss = realizedCrashProb - signalerAnticipatedCrashProb;
-	agentSCLoss = realizedSocialCost.total - anticipatedSocialCost.total;
+	agentLoss = realizedOutcome.crashProb - signalerAnticipatedOutcome.crashProb;
+	agentSCLoss = realizedOutcome.socialCost.total - ...
+		signalerAnticipatedOutcome.socialCost.total;
 	uiComponents.agentLossHeatmap.ColorData = agentLoss;
 	uiComponents.agentSCLossHeatmap.ColorData = agentSCLoss;
-	uiComponents.ausaEqHeatmap.ColorData = signalerAnticipatedEqs.';
-	uiComponents.auaaEqHeatmap.ColorData = agentAnticipatedEqs;
+	uiComponents.ausaEqHeatmap.ColorData = signalerAnticipatedOutcome.eqs.';
+	uiComponents.auaaEqHeatmap.ColorData = agentAnticipatedOutcome.eqs;
 
 	% Renormalize colormaps
 	colors = [255, 75, 75; 255, 255, 255; 1, 114, 189] ./ 255;
@@ -161,7 +162,7 @@ function UpdateLosses(uiComponents, worldParams)
 	colors = [119, 3, 252; 0, 3, 255; 0, 255, 0; 255, 255, 255; ...
 		252, 173, 3; 255, 0, 0; 244, 3, 252] ./ 255;
 	points = [1, 2, 3, 4, 5, 6, 7];
-	eqMap = LabelledColormap(points, colors, anticipatedEqs);
+	eqMap = LabelledColormap(points, colors, signalerAnticipatedOutcome.eqs);
 	uiComponents.surEqHeatmap.Colormap = eqMap;
 	uiComponents.susaEqHeatmap.Colormap = eqMap;
 	uiComponents.ausaEqHeatmap.Colormap = eqMap;
@@ -176,26 +177,24 @@ end
 function SCBreakdown(worldParams)
 	figure;
 
-	[~, ~, ~, ~, ~, realizedSocialCost] = ...
-		SignalerSlopeUncertainty(worldParams);
+	[~, realizedOutcome] = SignalerSlopeUncertainty(worldParams);
 
 	subplot(1, 2, 1);
 	hold on;
-	surf(realizedSocialCost.regretCost, "FaceColor", "blue");
-	surf(realizedSocialCost.accidentCost, "FaceColor", "red");
+	surf(realizedOutcome.socialCost.regretCost, "FaceColor", "blue");
+	surf(realizedOutcome.socialCost.accidentCost, "FaceColor", "red");
 	title("Social Cost for Signaler Uncertainty");
 	xlabel("Assumed Slope");
 	ylabel("Actual Slope");
 	zlabel("Social Cost");
 	legend("Regret Cost", "Accident Cost");
 
-	[~, ~, ~, ~, ~, realizedSocialCost] = ...
-		AgentSlopeUncertainty(worldParams);
+	[~, ~, realizedOutcome] = AgentSlopeUncertainty(worldParams);
 
 	subplot(1, 2, 2);
 	hold on;
-	surf(realizedSocialCost.regretCost, "FaceColor", "blue");
-	surf(realizedSocialCost.accidentCost, "FaceColor", "red");
+	surf(realizedOutcome.socialCost.regretCost, "FaceColor", "blue");
+	surf(realizedOutcome.socialCost.accidentCost, "FaceColor", "red");
 	title("Social Cost for Agent Uncertainty");
 	xlabel("Assumed Slope");
 	ylabel("Actual Slope");

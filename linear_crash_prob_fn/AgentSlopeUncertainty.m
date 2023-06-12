@@ -1,4 +1,4 @@
-function [signalerAnticipatedCrashProb, realizedCrashProb, signalerAnticipatedEqs, agentAnticipatedEqs, signalerAnticipatedSocialCost, realizedSocialCost] = AgentSlopeUncertainty(worldParams, granularity)
+function [signalerAnticipatedOutcome, agentAnticipatedOutcome, realizedOutcome] = AgentSlopeUncertainty(worldParams, granularity)
 	% Goal of this script: Assume crash prob is linear: p(x) = ax + b.
 	% Agents think they know the value of a, call it a_* (Signaling designer
 	% knows the true value). Signaling designer calculates optimal (accident
@@ -11,12 +11,9 @@ function [signalerAnticipatedCrashProb, realizedCrashProb, signalerAnticipatedEq
 		granularity(1, 1) uint32{mustBePositive} = 100
 	end
 	arguments (Output)
-		signalerAnticipatedCrashProb double
-		realizedCrashProb double
-		signalerAnticipatedEqs double
-		agentAnticipatedEqs double
-		signalerAnticipatedSocialCost SocialCost
-		realizedSocialCost SocialCost
+		signalerAnticipatedOutcome(1, 1) Outcome
+		agentAnticipatedOutcome(1, 1) Outcome
+		realizedOutcome(1, 1) Outcome
 	end
 
 	% Aliases
@@ -30,18 +27,29 @@ function [signalerAnticipatedCrashProb, realizedCrashProb, signalerAnticipatedEq
 	slopes = linspace(0, 1-yInt, granularity);
 	trueParams = WorldParams(slopes, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 	[chosenBeta, signalerAnticipatedCrashProb, signalerAnticipatedEqs] = GetOptimalBeta(trueParams);
-	signalerAnticipatedSocialCost = GetSocialCost(trueParams, chosenBeta, GetEqBehavior(trueParams, chosenBeta), signalerAnticipatedCrashProb);
+	signalerAnticipatedBehavior = GetEqBehavior(trueParams, chosenBeta);
+	signalerAnticipatedSocialCost = GetSocialCost(trueParams, chosenBeta, signalerAnticipatedBehavior, signalerAnticipatedCrashProb);
 
 	signalerAnticipatedCrashProb = repmat(squeeze(signalerAnticipatedCrashProb), granularity, 1).';
+
+	signalerAnticipatedOutcome = Outcome(signalerAnticipatedEqs, ...
+		signalerAnticipatedBehavior, signalerAnticipatedCrashProb, signalerAnticipatedSocialCost);
 
 	% Get agent behavior decisions for incorrect guesses of a
 	[assumedSlopeMat, betaMat] = meshgrid(slopes, chosenBeta); % Note: we swapped the order of the meshgrid from signaler uncertainty to keep assumption on horiz axis
 	assumedParams = WorldParams(assumedSlopeMat, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 	[inducedBehavior, agentAnticipatedEqs] = GetEqBehavior(assumedParams, betaMat);
+	agentAnticipatedCrashProb = GetCrashProb(assumedParams, inducedBehavior, chosenBeta);
+	agentAnticipatedSocialCost = GetSocialCost(assumedParams, chosenBeta, inducedBehavior, agentAnticipatedCrashProb);
+
+	agentAnticipatedOutcome = Outcome(agentAnticipatedEqs, inducedBehavior, ...
+		agentAnticipatedCrashProb, agentAnticipatedSocialCost);
 
 	% Calculate loss from agents assumming wrong slope
 	actualSlopeMat = assumedSlopeMat.'; % Transpose to get Cartesian product
 	trueParamsMat = WorldParams(actualSlopeMat, yInt, V2VMass, crashCost, trueSignalProbFn, falseSignalProbFn);
 	realizedCrashProb = GetCrashProb(trueParamsMat, inducedBehavior, betaMat);
 	realizedSocialCost = GetSocialCost(trueParamsMat, chosenBeta, inducedBehavior, realizedCrashProb);
+
+	realizedOutcome = Outcome(8, inducedBehavior, realizedCrashProb, realizedSocialCost);
 end
