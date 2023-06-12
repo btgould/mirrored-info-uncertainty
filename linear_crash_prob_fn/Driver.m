@@ -196,7 +196,7 @@ function SCBreakdown(worldParams)
 	hold on;
 	surf(realizedSocialCost.regretCost, "FaceColor", "blue");
 	surf(realizedSocialCost.accidentCost, "FaceColor", "red");
-	title("Social Cost for Signaler Uncertainty");
+	title("Social Cost for Agent Uncertainty");
 	xlabel("Assumed Slope");
 	ylabel("Actual Slope");
 	zlabel("Social Cost");
