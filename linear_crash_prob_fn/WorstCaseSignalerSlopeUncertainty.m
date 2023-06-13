@@ -4,9 +4,9 @@ worldParams = WorldParams(0.7, 0.1, 0.9, 3, @(y) 0.8.*y, @(y) 0.1.*y);
 
 % UI / control stuff
 uifig = uifigure();
-g = uigridlayout(uifig, [5, 2]);
+g = uigridlayout(uifig, [7, 2]);
 g.ColumnWidth = {'1x', '2x'};
-g.RowHeight = {50, 50, 50, 50, 50, 50};
+g.RowHeight = {50, 50, 50, 50, 50, 50, 50};
 
 slopeLbl = uilabel(g, "Text", "slope");
 slopeLbl.Layout.Row = 1;
@@ -47,7 +47,6 @@ trueSpFnSlider = uislider(g, "Limits", [0, 1]);
 trueSpFnSlider.Layout.Row = 5;
 trueSpFnSlider.Layout.Column = 2;
 trueSpFnSlider.Value = worldParams.trueSignalProbFn(1);
-uiComponents.trueSpFnSlider = trueSpFnSlider;
 
 falseSpFnLbl = uilabel(g, "Text", "False Signal Prob Slope");
 falseSpFnLbl.Layout.Row = 6;
@@ -56,33 +55,89 @@ falseSpFnSlider = uislider(g, "Limits", [0, trueSpFnSlider.Value]);
 falseSpFnSlider.Layout.Row = 6;
 falseSpFnSlider.Layout.Column = 2;
 falseSpFnSlider.Value = worldParams.falseSignalProbFn(1);
-uiComponents.falseSpFnSlider = falseSpFnSlider;
 
-% Figure
-fig = figure();
-p = plot(linspace(1, 2, 100));
-p.Parent.YLim = [0, 1];
-[crashProbs, behavior] = CrashProbForPlot(p, worldParams);
+uncertiantyRadiusLbl = uilabel(g, "Text", "Uncertainty Radius");
+falseuncertiantyRadiusLblSpFnLbl.Layout.Row = 7;
+uncertiantyRadiusLbl.Layout.Column = 1;
+uncertaintyRadiusSlider = uislider(g, "Limits", [0, 1]);
+uncertaintyRadiusSlider.Layout.Row = 7;
+uncertaintyRadiusSlider.Layout.Column = 2;
+uncertaintyRadiusSlider.Value = 0.1;
+
+% Figures
+crashProbFig = figure();
+dispComponents.cpPlot = plot(1);
+dispComponents.cpPlot.Parent.XLim = [0, 1];
+dispComponents.cpPlot.Parent.YLim = [0, 1];
+title("Crash Probability as a Function of Beta");
+xlabel("Beta");
+ylabel("Crash Probability");
+
+slopeFig = figure();
+dispComponents.slopePlot = plot(1);
+dispComponents.slopePlot.Parent.XLim = [0, 1];
+dispComponents.slopePlot.Parent.YLim = [0, 1];
+title("Worst Case Slope Under Uncertainty Radius");
+xlabel("Assumed Slope");
+ylabel("Worst Case Slope");
+
+UpdatePlots(dispComponents, worldParams, uncertaintyRadiusSlider.Value)
 
 % Slider function hooks
-slopeSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
-	worldParams.UpdateSlope(event.Value));
-yIntSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
-	worldParams.UpdateYInt(event.Value));
-V2VMassSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
-	worldParams.UpdateV2VMass(event.Value));
-crashCostSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
-	worldParams.UpdateCrashCost(event.Value));
-trueSpFnSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
-	worldParams.UpdateTrueSignalProbFn(@(y) event.Value.*y));
-falseSpFnSlider.ValueChangingFcn = @(src, event) CrashProbForPlot(p, ...
-	worldParams.UpdateFalseSignalProbFn(@(y) event.Value.*y));
+slopeSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
+	worldParams.UpdateSlope(event.Value), uncertaintyRadiusSlider.Value);
+yIntSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
+	worldParams.UpdateYInt(event.Value), uncertaintyRadiusSlider.Value);
+V2VMassSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
+	worldParams.UpdateV2VMass(event.Value), uncertaintyRadiusSlider.Value);
+crashCostSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
+	worldParams.UpdateCrashCost(event.Value), uncertaintyRadiusSlider.Value);
+trueSpFnSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
+	worldParams.UpdateTrueSignalProbFn(@(y) event.Value.*y), uncertaintyRadiusSlider.Value);
+falseSpFnSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
+	worldParams.UpdateFalseSignalProbFn(@(y) event.Value.*y), uncertaintyRadiusSlider.Value);
 
-function [crashProbs, behavior] = CrashProbForPlot(plot, worldParams)
+function UpdatePlots(dispComponents, worldParams, uncertaintyRadius) 
+	CrashProbForPlot(dispComponents.cpPlot, worldParams);
+	GetWorstCaseSlope(dispComponents.slopePlot, worldParams, uncertaintyRadius);
+end
+
+function [crashProbs, behavior] = CrashProbForPlot(cpPlot, worldParams)
 	beta = linspace(0, 1, 100);
 
 	behavior = GetEqBehavior(worldParams, beta);
 	crashProbs = GetCrashProb(worldParams, behavior, beta);
 
-	plot.YData = crashProbs;
+	cpPlot.XData = beta;
+	cpPlot.YData = crashProbs;
+end
+
+function worstCaseSlope = GetWorstCaseSlope(slopePlot, signalerAnticipatedWP, uncertaintyRadius)
+	arguments (Input)
+		slopePlot
+		signalerAnticipatedWP(1, 1) WorldParams
+		uncertaintyRadius(1, 1) double{mustBePositive}
+	end
+
+	% Calculate signaler expected outcome
+	[chosenBeta, expectedCP] = GetOptimalBeta(signalerAnticipatedWP);
+
+	% Calculate realized outcomes for all realized slopes in range
+	a = signalerAnticipatedWP.slope;
+	% FIXME: borders here need to be capped at 0 or 1
+	possibleSlopes = linspace(a-uncertaintyRadius, a+uncertaintyRadius, 100); % TODO: get rid of this hardcoded granularity. 
+	actualWP = signalerAnticipatedWP;
+	actualWP.slope = possibleSlopes;
+
+	realizedCP = GetCrashProb(actualWP, GetEqBehavior(actualWP, chosenBeta), chosenBeta);
+
+	% Calculate loss and find worst case
+	loss = realizedCP - expectedCP;
+	[worstLoss, worstSlopeIdx] = max(loss);
+	worstCaseSlope = possibleSlopes(worstSlopeIdx);
+
+	% Update display
+	slopePlot.YData = worstCaseSlope;
+	% TODO: currently, I do this for one slope. I'd like to do it for all
+	% of them 
 end
