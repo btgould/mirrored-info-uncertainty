@@ -32,7 +32,7 @@ function [signalerAnticipatedOutcome, agentAnticipatedOutcome, realizedOutcome] 
 
 	signalerAnticipatedCrashProb = repmat(squeeze(signalerAnticipatedCrashProb), granularity, 1).';
 
-	signalerAnticipatedOutcome = Outcome(signalerAnticipatedEqs, ...
+	signalerAnticipatedOutcome = Outcome(chosenBeta, signalerAnticipatedEqs, ...
 		signalerAnticipatedBehavior, signalerAnticipatedCrashProb, signalerAnticipatedSocialCost);
 
 	% Get agent behavior decisions for incorrect guesses of a
@@ -42,8 +42,8 @@ function [signalerAnticipatedOutcome, agentAnticipatedOutcome, realizedOutcome] 
 	agentAnticipatedCrashProb = GetCrashProb(assumedParams, inducedBehavior, chosenBeta);
 	agentAnticipatedSocialCost = GetSocialCost(assumedParams, chosenBeta, inducedBehavior, agentAnticipatedCrashProb);
 
-	agentAnticipatedOutcome = Outcome(agentAnticipatedEqs, inducedBehavior, ...
-		agentAnticipatedCrashProb, agentAnticipatedSocialCost);
+	agentAnticipatedOutcome = Outcome(chosenBeta, agentAnticipatedEqs, ...
+		inducedBehavior, agentAnticipatedCrashProb, agentAnticipatedSocialCost);
 
 	% Calculate loss from agents assumming wrong slope
 	actualSlopeMat = assumedSlopeMat.'; % Transpose to get Cartesian product
@@ -51,5 +51,6 @@ function [signalerAnticipatedOutcome, agentAnticipatedOutcome, realizedOutcome] 
 	realizedCrashProb = GetCrashProb(trueParamsMat, inducedBehavior, betaMat);
 	realizedSocialCost = GetSocialCost(trueParamsMat, chosenBeta, inducedBehavior, realizedCrashProb);
 
-	realizedOutcome = Outcome(8, inducedBehavior, realizedCrashProb, realizedSocialCost);
+	realizedOutcome = Outcome(chosenBeta, 8, inducedBehavior, ...
+		realizedCrashProb, realizedSocialCost);
 end

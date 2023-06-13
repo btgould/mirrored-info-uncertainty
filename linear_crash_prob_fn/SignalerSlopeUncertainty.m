@@ -30,8 +30,8 @@ function [signalerAnticipatedOutcome, realizedOutcome] = SignalerSlopeUncertaint
 	anticipatedSocialCost = GetSocialCost(assumedParams, chosenBeta, anticipatedBehavior, anticipatedCrashProb);
 	anticipatedCrashProb = repmat(squeeze(anticipatedCrashProb), granularity, 1).';
 
-	signalerAnticipatedOutcome = Outcome(anticipatedEqs, anticipatedBehavior, ...
-		anticipatedCrashProb, anticipatedSocialCost);
+	signalerAnticipatedOutcome = Outcome(chosenBeta, anticipatedEqs, ...
+		anticipatedBehavior, anticipatedCrashProb, anticipatedSocialCost);
 
 	% Calculate loss of assumed optimal beta on different slopes
 	[betaMat, slopeMat] = meshgrid(chosenBeta, slopes);
@@ -40,6 +40,6 @@ function [signalerAnticipatedOutcome, realizedOutcome] = SignalerSlopeUncertaint
 	realizedCrashProb = GetCrashProb(trueParams, inducedBehavior, betaMat);
 	realizedSocialCost = GetSocialCost(trueParams, betaMat, inducedBehavior, realizedCrashProb);
 
-	realizedOutcome = Outcome(realizedEqs, inducedBehavior, realizedCrashProb, ...
-		realizedSocialCost);
+	realizedOutcome = Outcome(chosenBeta, realizedEqs, inducedBehavior, ...
+		realizedCrashProb, realizedSocialCost);
 end
