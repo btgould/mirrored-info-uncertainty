@@ -1,11 +1,19 @@
 function [signalerAnticipatedOutcome, realizedOutcome] = SignalerSlopeUncertainty(worldParams, granularity)
-	% Goal of this script: Assume crash prob is linear: p(x) = ax + b.
+	% Assumes crash prob is linear: p(x) = ax + b.
 	% Signaling designer thinks they know the value of a, call it a_*. We then
 	% calculate the optimal (accident minimizing) value of beta assuming p(x) =
 	% a_*x + b.
-	% Then, we calculate the accident probabilities induced by this beta for
-	% values of a != a_*, and plot the increase in accident probability caused
-	% by the "bad guess" by the signaling designer.
+	%
+	% Then, we consider the possibility that the true slope is a != a_*.
+	% This true slope is known to the agents. Using the beta chosen by the
+	% signaler, and the true slope, agents make a behavior decision. The
+	% accident probability induced by this behavior is calculated so that
+	% it can be compared to the accident probability that could have been
+	% achieved if the signaler had accurately known a.
+	%
+	% We return both the outcome anticipated by the signaler (which is not
+	% accurate because they do not know the true probability of accidents),
+	% and the realized outcome given the behavior chosen by agents.
 	arguments (Input)
 		worldParams(1, 1) WorldParams
 		granularity(1, 1) uint32{mustBePositive} = 100

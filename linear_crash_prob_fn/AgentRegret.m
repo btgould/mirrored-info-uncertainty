@@ -1,4 +1,12 @@
 function AgentRegret(worldParams)
+	% Calculates how much agents regret the decisions they made under
+	% uncertainty about the slope of p(x). This regret is marginalized (over
+	% agent type (xvu, xn, xvs) and regret type (careful or reckless)), and
+	% plotted in a new figure.
+	arguments (Input)
+		worldParams(1, 1) WorldParams
+	end
+
 	[~, agentAnticipatedOutcome, realizedOutcome] = ...
 		AgentSlopeUncertainty(worldParams);
 
@@ -96,7 +104,4 @@ function AgentRegret(worldParams)
 	xlabel("Assumed Slope");
 	ylabel("Actual Slope");
 	zlabel("Regret");
-
-	% I want to show regret of each individual group, total regret of
-	% reckless (careful) drivers, and total regret overall
 end

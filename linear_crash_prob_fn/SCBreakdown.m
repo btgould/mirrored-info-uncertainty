@@ -1,4 +1,8 @@
 function SCBreakdown(worldParams)
+	% Calculates social cost under both signaler and agent uncertainty
+	% about the slope of p(x), and displays it in a new figure. For
+	% analysis, social cost is subdivided into costs from regret and
+	% costs from accidents.
 	figure;
 
 	[~, realizedOutcome] = SignalerSlopeUncertainty(worldParams);

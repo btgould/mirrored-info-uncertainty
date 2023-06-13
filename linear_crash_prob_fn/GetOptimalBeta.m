@@ -1,11 +1,15 @@
 function [beta, crashProb, eqs] = GetOptimalBeta(worldParams)
+	% Calculates the optimal (crash probability minimizing) signaling
+	% policy for some set of world parameters. Also returns the crash
+	% probability and index of the equilibrium family induced by this
+	% signaling policy.
 	arguments (Input)
 		worldParams WorldParams
 	end
 	arguments (Output)
 		beta double
 		crashProb double
-		eqs double
+		eqs uint8{mustBeInRange(eqs, 1, 8)}
 	end
 
 	crashProbs = squeeze(zeros(cat(2, 2, size(worldParams.slope))));

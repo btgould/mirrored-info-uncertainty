@@ -1,4 +1,9 @@
 function crashProb = GetCrashProb(worldParams, behavior, beta)
+	% Calculates "long-term" equilibrium accident probability P(G).
+	%
+	% Assumes crash probability p(x) is linear to use a closed form expression
+	% for P(G). In the general case, this is not correct, and a recursive
+	% solver must be used.
 	arguments (Input)
 		worldParams WorldParams
 		behavior Behavior

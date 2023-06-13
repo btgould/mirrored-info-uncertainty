@@ -1,11 +1,15 @@
 function [behavior, eqs] = GetEqBehavior(worldParams, beta)
+	% Calculates the equilibrium behavior of rational, selfish agents given
+	% some set of world parameters and a chosen signaling policy beta.
+	% Returns the mass of each type of driver choosing to be reckless, as
+	% well as the index of which equilibrium family is active.
 	arguments (Input)
 		worldParams WorldParams
 		beta double
 	end
 	arguments (Output)
 		behavior Behavior
-		eqs double
+		eqs uint8{mustBeInRange(eqs, 1, 8)}
 	end
 
 	ty = worldParams.trueSignalProbFn(worldParams.V2VMass);
@@ -44,6 +48,9 @@ function [behavior, eqs] = GetEqBehavior(worldParams, beta)
 	eqs(E7) = 7;
 
 	% Describe eq behavior in each region
+	% To calculate the behavior in indifferent regions, we use the
+	% assumption that crash probability is linear. In the general case,
+	% this can be done with an inverse function.
 	xvu = zeros(size(worldParams.slope));
 	xvui = (Pvu - worldParams.yInt) ./ (worldParams.slope .* (1 - Qvu));
 	xvu(E2) = xvui(E2);

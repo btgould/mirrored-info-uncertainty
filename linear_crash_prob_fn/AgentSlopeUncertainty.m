@@ -1,11 +1,28 @@
 function [signalerAnticipatedOutcome, agentAnticipatedOutcome, realizedOutcome] = AgentSlopeUncertainty(worldParams, granularity)
-	% Goal of this script: Assume crash prob is linear: p(x) = ax + b.
+	% Assumes crash prob is linear and p(x) = ax + b.
 	% Agents think they know the value of a, call it a_* (Signaling designer
 	% knows the true value). Signaling designer calculates optimal (accident
-	% minimizing) value of beta for the true value of a.
+	% minimizing) value of beta for the true value of a. (Implicitly, the
+	% signaler assumes agents also know the true value of a and will react
+	% accordingly to determine the "optimal" value of beta.)
+	%
 	% Agents then make behavior decisions using their guessed value a_* and the
-	% chosen value of beta. We calculate the new accident probability caused
-	% by the "bad guess" by the agents.
+	% chosen value of beta.
+	%
+	% We return the outcomes anticipated by both signaler and agents, as
+	% well as the realized outcome. The signaler anticipated outcome is not
+	% exact because agents do NOT know the true value of a, and so make
+	% behavior decision that were not anticipated when the signaler chose
+	% beta. The agent anticipated outcome is not exact because they do not
+	% know the actual probability of accidents occuring. The realized
+	% outcome takes into account the chosen beta, actual actions of the
+	% agents, and the actual probability of accidents.
+	%
+	% Since the agents are not actually capable of minimizing their own
+	% cost functions (due to a mistaken belief about accident frequency),
+	% the realized behavior is not accurately described by any of our
+	% equilibria. In a sense, it is still an equilibrium, but only if we
+	% consider modified agent cost functions to incorporate uncertainty.
 	arguments (Input)
 		worldParams(1, 1) WorldParams
 		granularity(1, 1) uint32{mustBePositive} = 100
