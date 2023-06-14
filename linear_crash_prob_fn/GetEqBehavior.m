@@ -5,7 +5,7 @@ function [behavior, eqs] = GetEqBehavior(worldParams, beta)
 	% well as the index of which equilibrium family is active.
 	arguments (Input)
 		worldParams WorldParams
-		beta double
+		beta double{mustBeInRange(beta, 0, 1)}
 	end
 	arguments (Output)
 		behavior Behavior
@@ -65,6 +65,20 @@ function [behavior, eqs] = GetEqBehavior(worldParams, beta)
 	xvsi = ((Pvs - worldParams.yInt) ./ worldParams.slope - 1 + Qvs .* worldParams.V2VMass) ./ Qvs;
 	xvs(E6) = xvsi(E6);
 	xvs(E7) = worldParams.V2VMass;
+
+	% Clean up from floating point errors
+	errorIdx = xvu < 0 | xn < 0 | xvs < 0;
+	if all(~errorIdx)
+		% Expected case, do nothing
+	elseif all(errorIdx > -eps)
+		xvu(xvu < 0) = 0;
+		xn(xn < 0) = 0;
+		xvs(xvs < 0) = 0;
+
+		warning("Encountered negative reckless mass. Within machine precision of 0, likely floating point error.");
+	else
+		error("Encountered negative reckless mass. Likely not flolating point error.")
+	end
 
 	behavior = Behavior(xn, xvu, xvs);
 end
