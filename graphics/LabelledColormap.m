@@ -18,7 +18,7 @@ function map = LabelledColormap(points, colors, data)
 	[points, idx] = unique(points);
 	colors = colors(idx, :);
 	if size(points, 2) > 1
-		map = interp1(points, colors, linspace(points(1), points(end), size(data, 1)));
+		map = interp1(points, colors, linspace(points(1), points(end), max(size(data))));
 	else
 		map = colors;
 	end
