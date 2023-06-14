@@ -74,12 +74,7 @@ xlabel("Beta");
 ylabel("Crash Probability");
 
 slopeFig = figure();
-dispComponents.slopePlot = plot(1);
-dispComponents.slopePlot.Parent.XLim = [0, 1];
-dispComponents.slopePlot.Parent.YLim = [0, 1];
-title("Worst Case Slope Under Uncertainty Radius");
-xlabel("Assumed Slope");
-ylabel("Worst Case Slope");
+dispComponents.slopeAxis = plot(1).Parent;
 
 UpdatePlots(dispComponents, worldParams, uncertaintyRadiusSlider.Value)
 
@@ -96,10 +91,12 @@ trueSpFnSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
 	worldParams.UpdateTrueSignalProbFn(@(y) event.Value.*y), uncertaintyRadiusSlider.Value);
 falseSpFnSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
 	worldParams.UpdateFalseSignalProbFn(@(y) event.Value.*y), uncertaintyRadiusSlider.Value);
+uncertaintyRadiusSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
+	worldParams, event.Value);
 
 function UpdatePlots(dispComponents, worldParams, uncertaintyRadius)
 	CrashProbForPlot(dispComponents.cpPlot, worldParams);
-	GetWorstCaseSlope(dispComponents.slopePlot, worldParams, uncertaintyRadius);
+	GetWorstCaseSlope(dispComponents.slopeAxis, worldParams, uncertaintyRadius);
 end
 
 function [crashProbs, behavior] = CrashProbForPlot(cpPlot, worldParams)
@@ -112,14 +109,15 @@ function [crashProbs, behavior] = CrashProbForPlot(cpPlot, worldParams)
 	cpPlot.YData = crashProbs;
 end
 
-function worstCaseSlopes = GetWorstCaseSlope(slopePlot, worldParams, uncertaintyRadius)
+function worstCaseSlopes = GetWorstCaseSlope(slopeAxis, worldParams, uncertaintyRadius)
 	arguments (Input)
-		slopePlot
+		slopeAxis
 		worldParams(1, 1) WorldParams
 		uncertaintyRadius(1, 1) double{mustBePositive}
 	end
 	arguments (Output)
-		worstCaseSlopes % TODO: re add validation
+		worstCaseSlopes double{mustBeInRange(worstCaseSlopes, -0.1, 1)}
+		% Small negative window here to account for 0 not being a chosen offset
 	end
 
 	% Calculate signaler expected outcome for each possible slope
@@ -143,11 +141,34 @@ function worstCaseSlopes = GetWorstCaseSlope(slopePlot, worldParams, uncertainty
 	% Calculate loss and find worst case
 	[~, optimalCP] = GetOptimalBeta(realizedWP);
 	loss = realizedCP - optimalCP;
-	[worstLoss, worstSlopeIdx] = max(loss); % TODO: fuzzy min
+	[worstLoss, worstSlopeIdx] = fuzzyMax(loss); % TODO: display worst loss
 	worstCaseOffsets = offsets(worstSlopeIdx);
 	worstCaseSlopes = anticipatedSlopes + worstCaseOffsets;
 
 	% Update display
-	slopePlot.XData = anticipatedSlopes;
-	slopePlot.YData = worstCaseSlopes;
+	slopeAxis.XLim = [0, 1 - worldParams.yInt];
+	slopeAxis.YLim = [0, 1 - worldParams.yInt];
+
+	plot(slopeAxis, anticipatedSlopes, worstCaseSlopes);
+	title("Worst Case Slope Under Uncertainty Radius");
+	xlabel("Assumed Slope");
+	ylabel("Worst Case Slope");
+
+	% Plot limits of uncertainty
+	slopeAxis.NextPlot = "add";
+	plot(slopeAxis, anticipatedSlopes, anticipatedSlopes-uncertaintyRadius, "--r");
+	plot(slopeAxis, anticipatedSlopes, anticipatedSlopes+uncertaintyRadius, "--r");
+	slopeAxis.NextPlot = "replacechildren";
+end
+
+function [maximum, idx] = fuzzyMax(data)
+	% Clean up from floating point errors
+	data(abs(data) < eps) = 0;
+
+	% Take maximum
+	[maximum, idx] = max(data);
+
+	% Check for case where no loss is possible
+	midIdx = int32(max(size(maximum))/2);
+	idx(maximum == min(data)) = midIdx;
 end

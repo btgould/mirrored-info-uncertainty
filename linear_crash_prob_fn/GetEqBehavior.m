@@ -75,7 +75,9 @@ function [behavior, eqs] = GetEqBehavior(worldParams, beta)
 		xn(xn < 0) = 0;
 		xvs(xvs < 0) = 0;
 
+		warning('off', 'backtrace')
 		warning("Encountered negative reckless mass. Within machine precision of 0, likely floating point error.");
+		warning('on', 'backtrace')
 	else
 		error("Encountered negative reckless mass. Likely not flolating point error.")
 	end
