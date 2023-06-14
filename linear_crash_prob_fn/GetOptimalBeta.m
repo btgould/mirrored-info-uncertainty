@@ -12,20 +12,36 @@ function [beta, crashProb, eqs] = GetOptimalBeta(worldParams)
 		eqs uint8{mustBeInRange(eqs, 1, 8)}
 	end
 
-	crashProbs = squeeze(zeros(cat(2, 2, size(worldParams.slope))));
-	eqList = crashProbs;
-	for beta = [0, 1]
-		[behavior, eqList(beta+1, :)] = GetEqBehavior(worldParams, beta);
-		crashProbs(beta+1, :) = GetCrashProb(worldParams, behavior, beta);
-	end
+	% NOTE: I would really like to do this as an array, rather than a
+	% struct, but since I don't know the dimensions of slope that will be
+	% passed in, I can't. The ":" operator flattens ALL remaining
+	% dimensions, which is a problem if I want to accept both 1D and 2D
+	% uncertainty matrices.
+	crashProbs.beta0 = zeros(size(worldParams.slope));
+	crashProbs.beta1 = zeros(size(worldParams.slope));
+	eqList.beta0 = zeros(size(worldParams.slope));
+	eqList.beta1 = zeros(size(worldParams.slope));
 
-	% [crashProb, beta] = min(crashProbs);
-	[crashProb, beta] = fuzzyMin(crashProbs, 1e-5);
+	% Calculate crash prob for each possible minimizer beta
+	[behavior, eqList.beta0] = GetEqBehavior(worldParams, 0);
+	crashProbs.beta0 = GetCrashProb(worldParams, behavior, 0);
+	[behavior, eqList.beta1] = GetEqBehavior(worldParams, 1);
+	crashProbs.beta1 = GetCrashProb(worldParams, behavior, 1);
 
-	eqs = zeros(size(beta, 2), 1);
-	for i = 1:size(beta, 2)
-		eqs(i) = eqList(beta(i), i);
-	end
+	% Find min crash prob and beta that causes it
+	oldSize = size(crashProbs.beta0);
+	newSize = cat(2, 1, oldSize);
+	crashProbs.beta0 = reshape(crashProbs.beta0, newSize);
+	crashProbs.beta1 = reshape(crashProbs.beta1, newSize);
+	crashProbMat = cat(1, crashProbs.beta0, crashProbs.beta1);
+
+	% [crashProb, beta] = min(crashProbMat);
+	[crashProb, beta] = fuzzyMin(crashProbMat, 1e-5);
+	crashProb = reshape(crashProb, oldSize);
+	beta = reshape(beta, oldSize);
+	eqs = zeros(size(worldParams.slope));
+	eqs(beta == 1) = eqList.beta0(beta == 1);
+	eqs(beta == 2) = eqList.beta1(beta == 2);
 
 	beta = beta - 1; % Adjusts for offset caused by matlab's one indexing
 end
