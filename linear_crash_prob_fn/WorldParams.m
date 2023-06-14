@@ -18,6 +18,13 @@ classdef WorldParams < handle
 			obj.trueSignalProbFn = trueSignalProbFn;
 			obj.falseSignalProbFn = falseSignalProbFn;
 		end
+		function other = Copy(obj)
+			arguments (Output)
+				other(1, 1) WorldParams
+			end
+			other = WorldParams(obj.slope, obj.yInt, obj.V2VMass, obj.crashCost, ...
+				obj.trueSignalProbFn, obj.falseSignalProbFn);
+		end
 		function obj = UpdateSlope(obj, newSlope)
 			try
 				obj.slope = newSlope;

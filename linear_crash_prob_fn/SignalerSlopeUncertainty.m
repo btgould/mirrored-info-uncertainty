@@ -36,10 +36,15 @@ function [signalerAnticipatedOutcome, realizedOutcome] = SignalerSlopeUncertaint
 	[chosenBeta, anticipatedCrashProb, anticipatedEqs] = GetOptimalBeta(assumedParams);
 	anticipatedBehavior = GetEqBehavior(assumedParams, chosenBeta);
 	anticipatedSocialCost = GetSocialCost(assumedParams, chosenBeta, anticipatedBehavior, anticipatedCrashProb);
-	anticipatedCrashProb = repmat(squeeze(anticipatedCrashProb), granularity, 1).';
+
+	% This is just a repmat of crash probs caused by anticipated slopes.
+	% But since I encode uncertainty pairs with a Cartesian product, the
+	% dimension that is being repeated transposes this to the crash probs
+	% caused by beta for each value of ACTUAL slope
+	optimalCrashProb = repmat(squeeze(anticipatedCrashProb), granularity, 1).';
 
 	signalerAnticipatedOutcome = Outcome(chosenBeta, anticipatedEqs, ...
-		anticipatedBehavior, anticipatedCrashProb, anticipatedSocialCost);
+		anticipatedBehavior, optimalCrashProb, anticipatedSocialCost);
 
 	% Calculate loss of assumed optimal beta on different slopes
 	[betaMat, slopeMat] = meshgrid(chosenBeta, slopes);

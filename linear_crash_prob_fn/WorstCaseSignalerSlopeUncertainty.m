@@ -97,7 +97,7 @@ trueSpFnSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
 falseSpFnSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
 	worldParams.UpdateFalseSignalProbFn(@(y) event.Value.*y), uncertaintyRadiusSlider.Value);
 
-function UpdatePlots(dispComponents, worldParams, uncertaintyRadius) 
+function UpdatePlots(dispComponents, worldParams, uncertaintyRadius)
 	CrashProbForPlot(dispComponents.cpPlot, worldParams);
 	GetWorstCaseSlope(dispComponents.slopePlot, worldParams, uncertaintyRadius);
 end
@@ -112,32 +112,42 @@ function [crashProbs, behavior] = CrashProbForPlot(cpPlot, worldParams)
 	cpPlot.YData = crashProbs;
 end
 
-function worstCaseSlope = GetWorstCaseSlope(slopePlot, signalerAnticipatedWP, uncertaintyRadius)
+function worstCaseSlopes = GetWorstCaseSlope(slopePlot, worldParams, uncertaintyRadius)
 	arguments (Input)
 		slopePlot
-		signalerAnticipatedWP(1, 1) WorldParams
+		worldParams(1, 1) WorldParams
 		uncertaintyRadius(1, 1) double{mustBePositive}
 	end
+	arguments (Output)
+		worstCaseSlopes % TODO: re add validation
+	end
 
-	% Calculate signaler expected outcome
-	[chosenBeta, expectedCP] = GetOptimalBeta(signalerAnticipatedWP);
+	% Calculate signaler expected outcome for each possible slope
+	anticipatedSlopes = linspace(0, 1-worldParams.yInt, 100); % TODO: magic 100s
+	signalerAnticipatedWP = worldParams.Copy().UpdateSlope(anticipatedSlopes);
+	chosenBeta = GetOptimalBeta(signalerAnticipatedWP);
+
+	% Compute set of possible realized slopes
+	anticipatedSlopeMat = repmat(anticipatedSlopes, [100, 1]);
+	offsets = linspace(-uncertaintyRadius, uncertaintyRadius, 100);
+	offsetMat = repmat(offsets, [100, 1]).';
+	realizedSlopeMat = anticipatedSlopeMat + offsetMat;
+	realizedSlopeMat(realizedSlopeMat < 0) = 0;
+	realizedSlopeMat(realizedSlopeMat > 1-worldParams.yInt) = 1 - worldParams.yInt;
 
 	% Calculate realized outcomes for all realized slopes in range
-	a = signalerAnticipatedWP.slope;
-	% FIXME: borders here need to be capped at 0 or 1
-	possibleSlopes = linspace(a-uncertaintyRadius, a+uncertaintyRadius, 100); % TODO: get rid of this hardcoded granularity. 
-	actualWP = signalerAnticipatedWP;
-	actualWP.slope = possibleSlopes;
-
-	realizedCP = GetCrashProb(actualWP, GetEqBehavior(actualWP, chosenBeta), chosenBeta);
+	realizedWP = worldParams.Copy().UpdateSlope(realizedSlopeMat);
+	betaMat = repmat(chosenBeta, [100, 1]);
+	realizedCP = GetCrashProb(realizedWP, GetEqBehavior(realizedWP, betaMat), betaMat);
 
 	% Calculate loss and find worst case
-	loss = realizedCP - expectedCP;
-	[worstLoss, worstSlopeIdx] = max(loss);
-	worstCaseSlope = possibleSlopes(worstSlopeIdx);
+	[~, optimalCP] = GetOptimalBeta(realizedWP);
+	loss = realizedCP - optimalCP;
+	[worstLoss, worstSlopeIdx] = max(loss); % TODO: fuzzy min
+	worstCaseOffsets = offsets(worstSlopeIdx);
+	worstCaseSlopes = anticipatedSlopes + worstCaseOffsets;
 
 	% Update display
-	slopePlot.YData = worstCaseSlope;
-	% TODO: currently, I do this for one slope. I'd like to do it for all
-	% of them 
+	slopePlot.XData = anticipatedSlopes;
+	slopePlot.YData = worstCaseSlopes;
 end
