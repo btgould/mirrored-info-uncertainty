@@ -16,8 +16,8 @@ function thresholds = GetNoLossUncertaintyThresholds(worldParams)
 	slopes = linspace(0, 1-worldParams.yInt, 100);
 	newWP = worldParams.Copy().UpdateSlope(slopes);
 
-	[~, minEqs] = GetEqBehavior(newWP, 1);
-	[~, maxEqs] = GetEqBehavior(newWP, 0);
+	[~, minEqs] = GetEqBehavior(newWP, 0);
+	[~, maxEqs] = GetEqBehavior(newWP, 1);
 
 	minEqsBounded = 3 <= minEqs & minEqs <= 7;
 	maxEqsBounded = maxEqs == 1 | maxEqs == 2;
