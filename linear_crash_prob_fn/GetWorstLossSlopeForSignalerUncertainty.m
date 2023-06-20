@@ -1,4 +1,4 @@
-function worstCaseSlopes = GetWorstCaseSlopeForSignalerUncertainty(slopeAxes, worldParams, uncertaintyRadius)
+function worstCaseSlopes = GetWorstLossSlopeForSignalerUncertainty(slopeAxes, worldParams, uncertaintyRadius)
 	arguments (Input)
 		slopeAxes
 		worldParams(1, 1) WorldParams
@@ -27,8 +27,10 @@ function worstCaseSlopes = GetWorstCaseSlopeForSignalerUncertainty(slopeAxes, wo
 	betaMat = repmat(chosenBeta, [100, 1]);
 	realizedCP = GetCrashProb(realizedWP, GetEqBehavior(realizedWP, betaMat), betaMat);
 
-	% Calculate crash prob and find worst case
-	[worstCP, worstSlopeIdx] = fuzzyMax(realizedCP); 
+	% Calculate loss and find worst case
+	[~, optimalCP] = GetOptimalBeta(realizedWP);
+	loss = realizedCP - optimalCP;
+	[worstLoss, worstSlopeIdx] = fuzzyMax(loss); % TODO: display worst loss
 	worstCaseOffsets = offsets(worstSlopeIdx);
 	worstCaseSlopes = anticipatedSlopes + worstCaseOffsets;
 
@@ -37,7 +39,7 @@ function worstCaseSlopes = GetWorstCaseSlopeForSignalerUncertainty(slopeAxes, wo
 	slopeAxes.YLim = [0, 1 - worldParams.yInt];
 
 	plot(slopeAxes, anticipatedSlopes, worstCaseSlopes);
-	title("Worst Case Slope Under Uncertainty Radius");
+	title("Slope Causing Largest Loss Under Uncertainty Radius");
 	xlabel("Assumed Slope");
 	ylabel("Worst Case Slope");
 
@@ -55,12 +57,7 @@ function [maximum, idx] = fuzzyMax(data)
 	% Take maximum
 	[maximum, idx] = max(data);
 
-	% Return last idx to have maximum value
-	lastRow = data(end, :);
-	lastRowIsMax = abs(maximum - lastRow) < eps;
-	idx(lastRowIsMax) = size(data, 1);
-
 	% Check for case where no loss is possible
 	midIdx = int32(max(size(maximum))/2);
-	idx(abs(maximum - min(data)) < eps) = midIdx;
+	idx(maximum == min(data)) = midIdx;
 end
