@@ -78,9 +78,10 @@ dispComponents.slopeAxis = plot(1).Parent;
 
 lossFig = figure();
 dispComponents.lossPlot = plot(1);
-title("Loss Caused by Uncertainty");
-xlabel("Assumed Slope");
-ylabel("Loss");
+ax = dispComponents.lossPlot.Parent;
+title(ax, "Loss Caused by Uncertainty");
+xlabel(ax, "Assumed Slope");
+ylabel(ax, "Loss");
 
 UpdatePlots(dispComponents, worldParams, uncertaintyRadiusSlider.Value)
 
@@ -128,5 +129,6 @@ function loss = LossInCrashProb(lossPlot, worldParams, uncertaintyRadius)
 	[~, optimalCrashProb] = GetOptimalBeta(worldParams);
 
 	loss = realizedCrashProb - optimalCrashProb;
+	lossPlot.XData = slopes;
 	lossPlot.YData = loss;
 end

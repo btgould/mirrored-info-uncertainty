@@ -39,9 +39,9 @@ function worstCaseSlopes = GetWorstLossSlopeForSignalerUncertainty(slopeAxes, wo
 	slopeAxes.YLim = [0, 1 - worldParams.yInt];
 
 	plot(slopeAxes, anticipatedSlopes, worstCaseSlopes);
-	title("Slope Causing Largest Loss Under Uncertainty Radius");
-	xlabel("Assumed Slope");
-	ylabel("Worst Case Slope");
+	title(slopeAxes, "Slope Causing Largest Loss Under Uncertainty Radius");
+	xlabel(slopeAxes, "Assumed Slope");
+	ylabel(slopeAxes, "Worst Case Slope");
 
 	% Plot limits of uncertainty
 	slopeAxes.NextPlot = "add";
