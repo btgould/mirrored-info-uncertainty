@@ -102,6 +102,10 @@ uncertaintyRadiusSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispCompone
 	worldParams, event.Value);
 
 function UpdatePlots(dispComponents, worldParams, uncertaintyRadius)
+	% Make uncertainty exclude zero
+	uncertaintyRadius = max([uncertaintyRadius, eps]);
+
+	% Update plots
 	CrashProbForPlot(dispComponents.cpPlot, worldParams);
 	GetWorstCaseSlopeForSignalerUncertainty(dispComponents.slopeAxis, worldParams, uncertaintyRadius);
 	LossInCrashProb(dispComponents.lossPlot, worldParams, uncertaintyRadius);
@@ -125,7 +129,9 @@ function loss = LossInCrashProb(lossPlot, worldParams, uncertaintyRadius)
 	newSlopes(newSlopes > 1-worldParams.yInt) = 1 - worldParams.yInt;
 
 	worstCaseWP = worldParams.Copy().UpdateSlope(newSlopes);
-	[~, realizedCrashProb] = GetOptimalBeta(worstCaseWP);
+	chosenBeta = GetOptimalBeta(worstCaseWP);
+    realizedBehavior = GetEqBehavior(worldParams, chosenBeta);
+    realizedCrashProb = GetCrashProb(worldParams, realizedBehavior, chosenBeta);
 	[~, optimalCrashProb] = GetOptimalBeta(worldParams);
 
 	loss = realizedCrashProb - optimalCrashProb;
