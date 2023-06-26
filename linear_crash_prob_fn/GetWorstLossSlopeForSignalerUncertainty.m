@@ -33,6 +33,7 @@ function worstCaseSlopes = GetWorstLossSlopeForSignalerUncertainty(slopeAxes, wo
 	[worstLoss, worstSlopeIdx] = fuzzyMax(loss); % TODO: display worst loss
 	worstCaseOffsets = offsets(worstSlopeIdx);
 	worstCaseSlopes = anticipatedSlopes + worstCaseOffsets;
+	worstCaseSlopes(worstCaseSlopes > 1-worldParams.yInt) = 1 - worldParams.yInt;
 
 	% Update display
 	slopeAxes.XLim = [0, 1 - worldParams.yInt];
