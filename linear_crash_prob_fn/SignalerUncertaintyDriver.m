@@ -77,11 +77,10 @@ slopeFig = figure();
 dispComponents.slopeAxis = plot(1).Parent;
 
 lossFig = figure();
-dispComponents.lossPlot = plot(1);
-ax = dispComponents.lossPlot.Parent;
-title(ax, "Loss Caused by Uncertainty");
-xlabel(ax, "Assumed Slope");
-ylabel(ax, "Loss");
+dispComponents.lossHeatmap = heatmap(1);
+title(dispComponents.lossHeatmap, "Loss Caused by Uncertainty");
+xlabel(dispComponents.lossHeatmap, "Assumed Slope");
+ylabel(dispComponents.lossHeatmap, "Uncertainty Radius");
 
 UpdatePlots(dispComponents, worldParams, uncertaintyRadiusSlider.Value)
 
@@ -108,7 +107,7 @@ function UpdatePlots(dispComponents, worldParams, uncertaintyRadius)
 	% Update plots
 	CrashProbForPlot(dispComponents.cpPlot, worldParams);
 	GetWorstCaseSlopeForSignalerUncertainty(dispComponents.slopeAxis, worldParams, uncertaintyRadius);
-	LossInCrashProb(dispComponents.lossPlot, worldParams, uncertaintyRadius);
+	LossInCrashProb(dispComponents.lossHeatmap, worldParams);
 end
 
 function [crashProbs, behavior] = CrashProbForPlot(cpPlot, worldParams)
@@ -121,20 +120,7 @@ function [crashProbs, behavior] = CrashProbForPlot(cpPlot, worldParams)
 	cpPlot.YData = crashProbs;
 end
 
-function loss = LossInCrashProb(lossPlot, worldParams, uncertaintyRadius)
-	slopes = linspace(0, 1-worldParams.yInt);
-	worldParams = worldParams.Copy().UpdateSlope(slopes);
-
-	newSlopes = slopes + uncertaintyRadius;
-	newSlopes(newSlopes > 1-worldParams.yInt) = 1 - worldParams.yInt;
-
-	worstCaseWP = worldParams.Copy().UpdateSlope(newSlopes);
-	chosenBeta = GetOptimalBeta(worstCaseWP);
-    realizedBehavior = GetEqBehavior(worldParams, chosenBeta);
-    realizedCrashProb = GetCrashProb(worldParams, realizedBehavior, chosenBeta);
-	[~, optimalCrashProb] = GetOptimalBeta(worldParams);
-
-	loss = realizedCrashProb - optimalCrashProb;
-	lossPlot.XData = slopes;
-	lossPlot.YData = loss;
+function loss = LossInCrashProb(lossHeatmap, worldParams)
+	loss = GetLossFromUncertainty(worldParams);
+	lossHeatmap.ColorData = loss;
 end
