@@ -121,6 +121,6 @@ function [crashProbs, behavior] = CrashProbForPlot(cpPlot, worldParams)
 end
 
 function loss = LossInCrashProb(lossHeatmap, worldParams)
-	loss = GetLossFromUncertainty(worldParams);
+	loss = GetLossFromSignalerUncertainty(worldParams);
 	lossHeatmap.ColorData = loss;
 end

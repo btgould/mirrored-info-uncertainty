@@ -1,4 +1,4 @@
-function loss = GetLossFromUncertainty(worldParams, granularity)
+function loss = GetLossFromSignalerUncertainty(worldParams, granularity)
 	arguments (Input)
 		worldParams(1, 1) WorldParams
 		granularity(1, 1) uint16{mustBePositive} = 100
