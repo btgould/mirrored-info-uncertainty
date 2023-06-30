@@ -56,14 +56,6 @@ falseSpFnSlider.Layout.Row = 6;
 falseSpFnSlider.Layout.Column = 2;
 falseSpFnSlider.Value = worldParams.falseSignalProbFn(1);
 
-uncertiantyRadiusLbl = uilabel(g, "Text", "Uncertainty Radius");
-falseuncertiantyRadiusLblSpFnLbl.Layout.Row = 7;
-uncertiantyRadiusLbl.Layout.Column = 1;
-uncertaintyRadiusSlider = uislider(g, "Limits", [0, 1]);
-uncertaintyRadiusSlider.Layout.Row = 7;
-uncertaintyRadiusSlider.Layout.Column = 2;
-uncertaintyRadiusSlider.Value = 0.1;
-
 % Figures
 lossFig = figure();
 dispComponents.lossHeatmap = heatmap(1);
@@ -71,25 +63,25 @@ title(dispComponents.lossHeatmap, "Loss Caused by Uncertainty");
 xlabel(dispComponents.lossHeatmap, "Agent Assumed Slope");
 ylabel(dispComponents.lossHeatmap, "Uncertainty Radius");
 
-UpdatePlots(dispComponents, worldParams, uncertaintyRadiusSlider.Value)
+UpdatePlots(dispComponents, worldParams)
 
 % Slider function hooks
 slopeSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
-	worldParams.UpdateSlope(event.Value), uncertaintyRadiusSlider.Value);
+	worldParams.UpdateSlope(event.Value));
 yIntSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
-	worldParams.UpdateYInt(event.Value), uncertaintyRadiusSlider.Value);
+	worldParams.UpdateYInt(event.Value));
 V2VMassSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
-	worldParams.UpdateV2VMass(event.Value), uncertaintyRadiusSlider.Value);
+	worldParams.UpdateV2VMass(event.Value));
 crashCostSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
-	worldParams.UpdateCrashCost(event.Value), uncertaintyRadiusSlider.Value);
+	worldParams.UpdateCrashCost(event.Value));
 trueSpFnSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
-	worldParams.UpdateTrueSignalProbFn(@(y) event.Value.*y), uncertaintyRadiusSlider.Value);
+	worldParams.UpdateTrueSignalProbFn(@(y) event.Value.*y));
 falseSpFnSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
-	worldParams.UpdateFalseSignalProbFn(@(y) event.Value.*y), uncertaintyRadiusSlider.Value);
+	worldParams.UpdateFalseSignalProbFn(@(y) event.Value.*y));
 uncertaintyRadiusSlider.ValueChangingFcn = @(src, event) UpdatePlots(dispComponents, ...
-	worldParams, event.Value);
+	worldParams);
 
-function UpdatePlots(dispComponents, worldParams, uncertaintyRadius)
+function UpdatePlots(dispComponents, worldParams)
 	LossInCrashProb(dispComponents.lossHeatmap, worldParams);
 end
 
