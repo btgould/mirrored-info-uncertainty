@@ -1,6 +1,8 @@
 clear;
+set(groot, 'defaultAxesTickLabelInterpreter','latex'); set(groot, 'defaultLegendInterpreter','latex');
+set(0,'defaultTextInterpreter','latex'); %trying to set the default
 
-worldParams = WorldParams(0.7, 0.1, 0.9, 3, @(y) 0.8.*y, @(y) 0.1.*y);
+worldParams = WorldParams(0.7, 0.1, 0.9, 3, @(y) 0.6.*y, @(y) 0.3.*y);
 
 % UI / control stuff
 uifig = uifigure();
@@ -79,8 +81,8 @@ dispComponents.slopeAxis = plot(1).Parent;
 lossFig = figure();
 dispComponents.lossHeatmap = heatmap(1);
 title(dispComponents.lossHeatmap, "Loss Caused by Uncertainty");
-xlabel(dispComponents.lossHeatmap, "Assumed Slope");
-ylabel(dispComponents.lossHeatmap, "Uncertainty Radius");
+xlabel(dispComponents.lossHeatmap, "Assumed Danger Level $a_*$");
+ylabel(dispComponents.lossHeatmap, "Uncertainty Radius $\delta$");
 
 UpdatePlots(dispComponents, worldParams, uncertaintyRadiusSlider.Value)
 
@@ -121,6 +123,36 @@ function [crashProbs, behavior] = CrashProbForPlot(cpPlot, worldParams)
 end
 
 function loss = LossInCrashProb(lossHeatmap, worldParams)
-	loss = GetLossFromSignalerUncertainty(worldParams);
-	lossHeatmap.ColorData = loss;
+	loss = GetLossFromSignalerUncertainty(worldParams, 50);
+	lossHeatmap.ColorData = flipud(loss);
+
+	lossHeatmap.GridVisible = false;
+
+	% Change labels
+	lossHeatmap.XDisplayLabels(1) = {"$0$"};
+	lossHeatmap.XDisplayLabels(2:end-1) = {NaN};
+	lossHeatmap.XDisplayLabels(end) = {"$1 - p(0)~~~~~~~$"};
+	lossHeatmap.YDisplayLabels(1) = {"$1 - p(0)~~~~~~~$"};
+	lossHeatmap.YDisplayLabels(2:end-1) = {NaN};
+	lossHeatmap.YDisplayLabels(end) = {"$0$"};
+
+	% Change font settings
+	ax = lossHeatmap.NodeChildren(3);
+	ax.XAxis.TickLabelInterpreter = "latex";
+	ax.XAxis.FontSize = 10;
+	ax.XLabel.Interpreter = "latex";
+	ax.XLabel.FontSize = 14;
+	ax.YAxis.TickLabelInterpreter = "latex";
+	ax.YAxis.FontSize = 10;
+	ax.YLabel.Interpreter = "latex";
+	ax.YLabel.FontSize = 14;
+	ax.Title.Interpreter = "latex";
+	ax.Title.FontSize = 15;
+
+	% Change color settings 
+	ax.Parent.Parent.Color = [1 1 1];
+
+    % Change tick label direction
+    set(struct(lossHeatmap).NodeChildren(3), 'XTickLabelRotation', 0);
+    set(struct(lossHeatmap).NodeChildren(3), 'YTickLabelRotation', 90);
 end
